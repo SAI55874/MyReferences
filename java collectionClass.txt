@@ -1,0 +1,19 @@
+list <Datatype> Employee = new ArrayList<>();
+
+
+***Auto-boxing and Auto-unboxing
+DAO :Data Access Object
+*Interface
+*Impliment
+*service Layer
+
+Loggers
+
+book.DAO
+book.daoimpl
+book.exception
+book.model
+book.service
+book.serviceimpl
+io.client
+io.model

@@ -1,0 +1,169 @@
+             <------------Solution for Employee divided with respect to gender----------->
+
+package com.Employee;
+
+
+
+public class Employee {
+private String employeeId;
+private String employeeName;
+private String gender;
+private String DOB;
+private String skillSet;
+
+
+
+public String getEmployeeId() {
+return employeeId;
+}
+public void setEmployeeId(String employeeId) {
+this.employeeId = employeeId;
+}
+public String getEmployeeName() {
+return employeeName;
+}
+public void setEmployeeName(String employeeName) {
+this.employeeName = employeeName;
+}
+public String getGender() {
+return gender;
+}
+public void setGender(String gender) {
+this.gender = gender;
+}
+public String getDOB() {
+return DOB;
+}
+public void setDOB(String dOB) {
+DOB = dOB;
+}
+public String getSkillSet() {
+return skillSet;
+}
+public void setSkillSet(String skillSet) {
+this.skillSet = skillSet;
+}
+
+
+
+}
+
+
+
+[10:25] Mohammad Yasir
+
+package com.emplnputout;
+
+
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+
+
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+
+
+
+import com.Employee.Employee;
+
+
+
+public class Main {
+
+
+
+public static String MALE = "MALE";
+public static String FEMALE = "FEMALE";
+public static String python = "python";
+
+
+
+public static void main(String[] args) {
+try {
+File inputFile = new File("D:\\java\\list.xls");
+File outputFile = new File("D:\\java\\listoutput.xls");
+FileOutputStream outputStream = new FileOutputStream(outputFile);
+HSSFWorkbook inputWorkBook = new HSSFWorkbook(new FileInputStream(inputFile));
+HSSFSheet sheet = inputWorkBook.getSheetAt(0);
+HSSFWorkbook outputWorkbook = new HSSFWorkbook();
+HSSFSheet sheet1 = outputWorkbook.createSheet("Male Employees");
+HSSFSheet sheet2 = outputWorkbook.createSheet("Female Employees");
+HSSFSheet sheet3 = outputWorkbook.createSheet("python");
+List<Employee> employeeList = new ArrayList<Employee>();
+int rowCount1 = 0;
+int columnCount = 0;
+int rowCount2 = 0;
+for (int i = 1; i < sheet.getLastRowNum() + 1; i++) {
+Employee obj = new Employee();
+obj.setEmployeeId(sheet.getRow(i).getCell(0).toString());
+obj.setEmployeeName(sheet.getRow(i).getCell(1).toString());
+obj.setGender(sheet.getRow(i).getCell(2).toString());
+obj.setDOB(sheet.getRow(i).getCell(3).toString());
+obj.setSkillSet(sheet.getRow(i).getCell(4).toString());
+employeeList.add(obj);
+}
+for (Employee emp : employeeList) {
+if (emp.getGender().equalsIgnoreCase(MALE)) {
+Row row = sheet1.createRow(rowCount1++);
+Cell cell1 = row.createCell(columnCount++);
+cell1.setCellValue(emp.getEmployeeId());
+Cell cell2 = row.createCell(columnCount++);
+cell2.setCellValue(emp.getEmployeeName());
+Cell cell3 = row.createCell(columnCount++);
+cell3.setCellValue(emp.getGender());
+Cell cell4 = row.createCell(columnCount++);
+cell4.setCellValue(emp.getDOB());
+Cell cell5 = row.createCell(columnCount++);
+cell5.setCellValue(emp.getSkillSet());
+columnCount = 0;
+} else if (emp.getGender().equalsIgnoreCase(FEMALE)) {
+Row row = sheet2.createRow(rowCount2++);
+Cell cell1 = row.createCell(columnCount++);
+cell1.setCellValue(emp.getEmployeeId());
+Cell cell2 = row.createCell(columnCount++);
+cell2.setCellValue(emp.getEmployeeName());
+Cell cell3 = row.createCell(columnCount++);
+cell3.setCellValue(emp.getGender());
+Cell cell4 = row.createCell(columnCount++);
+cell4.setCellValue(emp.getDOB());
+Cell cell5 = row.createCell(columnCount++);
+cell5.setCellValue(emp.getSkillSet());
+columnCount = 0;
+}
+else if (emp.getSkillSet().equalsIgnoreCase(python)) {
+Row row = sheet3.createRow(rowCount1++);
+Cell cell1 = row.createCell(columnCount++);
+cell1.setCellValue(emp.getEmployeeId());
+Cell cell2 = row.createCell(columnCount++);
+cell2.setCellValue(emp.getEmployeeName());
+Cell cell3 = row.createCell(columnCount++);
+cell3.setCellValue(emp.getGender());
+Cell cell4 = row.createCell(columnCount++);
+cell4.setCellValue(emp.getDOB());
+Cell cell5 = row.createCell(columnCount++);
+cell5.setCellValue(emp.getSkillSet());
+columnCount = 0;
+}
+}
+outputWorkbook.write(outputStream);
+outputWorkbook.close();
+outputStream.close();
+} catch (FileNotFoundException e) {
+e.printStackTrace();
+} catch (IOException e) {
+e.printStackTrace();
+}
+
+
+
+}
+}

@@ -1,0 +1,142 @@
+              <---------Solution for Shop and products------>
+
+
+public class kirana {
+private String productid;
+private String productname;
+private String productprice;
+private String contity;
+private String category;
+public String getProductid() {
+return productid;
+}
+public void setProductid(String productid) {
+this.productid = productid;
+}
+public String getProductname() {
+return productname;
+}
+public void setProductname(String productname) {
+this.productname = productname;
+}
+public String getProductprice() {
+return productprice;
+}
+public void setProductprice(String productprice) {
+this.productprice = productprice;
+}
+public String getContity() {
+return contity;
+}
+public void setContity(String contity) {
+this.contity = contity;
+}
+public String getCategory() {
+return category;
+}
+public void setCategory(String category) {
+this.category = category;
+}
+@Override
+public String toString() {
+return "kirana [productid=" + productid + ", productname=" + productname + ", productprice=" + productprice
++ ", contity=" + contity + ", category=" + category + "]";
+}
+
+
+
+
+}
+
+
+
+[10:24] Mohammad Yasir
+
+package comhtc.javakirana;
+
+
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+
+
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+
+
+
+import com.htc.kirana.list.kirana;
+
+
+
+public class Main {
+
+
+
+public static String Category = "A";
+
+
+
+public static void main(String[] args) {
+try {
+File inputFile = new File("D:\\kirana\\kirana.xls");
+File outputFile = new File("D:\\kirana\\kiranaoutput.xls");
+FileOutputStream outputStream = new FileOutputStream(outputFile);
+HSSFWorkbook inputWorkBook = new HSSFWorkbook(new FileInputStream(inputFile));
+HSSFSheet sheet = inputWorkBook.getSheetAt(0);
+HSSFWorkbook outputWorkbook = new HSSFWorkbook();
+HSSFSheet sheet1 = outputWorkbook.createSheet("category");
+
+List<kirana> kiranaList = new ArrayList<kirana>();
+int rowCount1 = 0;
+int columnCount = 0;
+int rowCount2 = 0;
+for (int i = 1; i < sheet.getLastRowNum() + 1; i++) {
+kirana obj = new kirana();
+obj.setProductid(sheet.getRow(i).getCell(0).toString());
+obj.setProductname(sheet.getRow(i).getCell(1).toString());
+obj.setProductprice(sheet.getRow(i).getCell(2).toString());
+obj.setContity(sheet.getRow(i).getCell(3).toString());
+obj.setCategory(sheet.getRow(i).getCell(4).toString());
+kiranaList.add(obj);
+}
+for (kirana emp : kiranaList) {
+if (emp.getCategory().equalsIgnoreCase(Category)) {
+Row row = sheet1.createRow(rowCount1++);
+Cell cell1 = row.createCell(columnCount++);
+cell1.setCellValue(emp.getProductid());
+Cell cell2 = row.createCell(columnCount++);
+cell2.setCellValue(emp.getProductname());
+Cell cell3 = row.createCell(columnCount++);
+cell3.setCellValue(emp.getProductprice());
+Cell cell4 = row.createCell(columnCount++);
+cell4.setCellValue(emp.getContity());
+Cell cell5 = row.createCell(columnCount++);
+cell5.setCellValue(emp.getCategory());
+columnCount = 0;
+}
+}
+outputWorkbook.write(outputStream);
+outputWorkbook.close();
+outputStream.close();
+} catch (FileNotFoundException e) {
+e.printStackTrace();
+} catch (IOException e) {
+e.printStackTrace();
+}
+
+
+
+}
+
+
+
+}

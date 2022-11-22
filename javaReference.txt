@@ -1,0 +1,927 @@
+Logger log=new Logger(class)
+FileHandler fh=new FileHandelar(fileName);
+log.addHandler(fh);
+log.setLevel(Level.ALL);
+File file = new File("filename.txt");
+file.createNewFile();
+_______________________
+**Xcel file load And Unload 
+**JDBC 
+**Collections---List and Map(Exceptions,Crud Functions,Dao and DaoImplimentation)
+**File Handling,Loggers,Console,
+**
+
+
+ public Workbook getTemplateData(String xlsxFile) {
+    Workbook workbook = new Workbook();
+    parseSharedStrings(xlsxFile);
+    parseWorkesheet(xlsxFile, workbook);
+    parseComments(xlsxFile, workbook);
+    for (Worksheet worksheet : workbook.sheets) {
+        worksheet.dimension = manager.getDimension(worksheet);
+    }
+
+    return workbook;
+}
+
+private void parseComments(String tmpFile, Workbook workbook) {
+    try {
+        FileInputStream fin = new FileInputStream(tmpFile);
+        final ZipInputStream zin = new ZipInputStream(fin);
+        InputStream in = getInputStream(zin);
+        while (true) {
+            ZipEntry entry = zin.getNextEntry();
+            if (entry == null)
+                break;
+
+            String name = entry.getName();
+            if (name.endsWith(".xml")) { //$NON-NLS-1$
+                if (name.contains(COMMENTS)) {
+                    parseComments(in, workbook);
+                }
+            }
+            zin.closeEntry();
+        }
+        in.close();
+        zin.close();
+        fin.close();
+    } catch (FileNotFoundException e) {
+        System.out.println(e);
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+
+private void parseComments(InputStream in, Workbook workbook) {
+    try {
+        DefaultHandler handler = getCommentHandler(workbook);
+        SAXParser saxParser = getSAXParser();
+        saxParser.parse(in, handler);
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+}
+
+private DefaultHandler getCommentHandler(Workbook workbook) {
+    final Worksheet ws = workbook.sheets.get(0);
+    return new DefaultHandler() {
+        String lastTag = "";
+        private Cell ccell;
+
+        @Override
+        public void startElement(String uri, String localName,
+                String qName, Attributes attributes) throws SAXException {
+            lastTag = qName;
+            if (lastTag.equals("comment")) {
+                String cellName = attributes.getValue("ref");
+                int r = manager.getRowIndex(cellName);
+                int c = manager.getColumnIndex(cellName);
+                Row row = ws.rows.get(r);
+                if (row == null) {
+                    row = new Row();
+                    row.index = r;
+                    ws.rows.put(r, row);
+                }
+                ccell = row.cells.get(c);
+                if (ccell == null) {
+                    ccell = new Cell();
+                    ccell.cellName = cellName;
+                    row.cells.put(c, ccell);
+                }
+            }
+        }
+
+        @Override
+        public void characters(char[] ch, int start, int length)
+                throws SAXException {
+            String val = "";
+            if (ccell != null && lastTag.equals("t")) {
+                for (int i = start; i < start + length; i++) {
+                    val += ch[i];
+                }
+                if (ccell.comment == null)
+                    ccell.comment = val;
+                else {
+                    ccell.comment += val;
+                }
+            }
+        }
+    };
+}
+
+private void parseSharedStrings(String tmpFile) {
+    try {
+        FileInputStream fin = new FileInputStream(tmpFile);
+        final ZipInputStream zin = new ZipInputStream(fin);
+        InputStream in = getInputStream(zin);
+        while (true) {
+            ZipEntry entry = zin.getNextEntry();
+            if (entry == null)
+                break;
+            String name = entry.getName();
+            if (name.endsWith(".xml")) { //$NON-NLS-1$
+                if (name.startsWith(SHARED_STRINGS)) {
+                    parseStrings(in);
+                }
+            }
+            zin.closeEntry();
+        }
+        in.close();
+        zin.close();
+        fin.close();
+    } catch (FileNotFoundException e) {
+        System.out.println(e);
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+
+public void parseWorkesheet(String tmpFile, Workbook workbook) {
+    try {
+        FileInputStream fin = new FileInputStream(tmpFile);
+        final ZipInputStream zin = new ZipInputStream(fin);
+        InputStream in = getInputStream(zin);
+        while (true) {
+            ZipEntry entry = zin.getNextEntry();
+            if (entry == null)
+                break;
+
+            String name = entry.getName();
+            if (name.endsWith(".xml")) { //$NON-NLS-1$
+                if (name.contains("worksheets")) {
+                    Worksheet worksheet = new Worksheet();
+                    worksheet.name = name;
+                    parseWorksheet(in, worksheet);
+                    workbook.sheets.add(worksheet);
+                }
+            }
+            zin.closeEntry();
+        }
+        in.close();
+        zin.close();
+        fin.close();
+    } catch (FileNotFoundException e) {
+        System.out.println(e);
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+
+public void parseWorksheet(InputStream in, Worksheet worksheet)
+        throws IOException {
+    // read sheet1 sharedStrings
+    // styles, strings, formulas ...
+    try {
+        DefaultHandler handler = getDefaultHandler(worksheet);
+        SAXParser saxParser = getSAXParser();
+        saxParser.parse(in, handler);
+    } catch (SAXException e) {
+        e.printStackTrace();
+    } catch (ParserConfigurationException e) {
+        e.printStackTrace();
+    }
+}
+where Workbook class:
+
+public class Workbook {
+Integer id = null;
+public List<Worksheet> sheets = new ArrayList<Worksheet>();}
+and Worksheet class:
+
+public class Worksheet {
+public Integer id = null;
+public String name = null;
+public String dimension = null;
+public Map<Integer, Row> rows = new TreeMap<Integer, Row>();
+public Map<Integer, Column> columns = new TreeMap<Integer, Column>();
+public List<Span> spans = new ArrayList<Span>();}
+and Row class:
+
+public class Row {
+public Integer id = null;
+public Integer index = null;
+public Row tmpRow = null;
+public Style style = null;
+public Double height = null;
+public Map<Integer,Cell> cells = new TreeMap<Integer, Cell>();
+public String spans = null;
+public Integer customHeight = null;}
+and Cell class:
+
+public class Cell {
+public Integer id = null;
+public Integer rowIndex = null;
+public Integer colIndex = null;
+public String cellName = null;
+public String text = null;
+public String formula = null;
+public String comment = null;
+public Style style = null;
+public Object value = null;
+public Cell tmpCell = null;}
+and Column class:
+
+public class Column {
+    public Integer index = null;
+    public Style style = null;
+    public String width = null;
+    public Column tmpColumn = null;
+}
+and Span class:
+
+public class Span {
+    Integer id = null;
+    String topLeft = null;
+    String bottomRight = null;
+}
+
+
+
+
+
+
+
+
+_______read XLS file___________________
+
+
+import java.io.File;  
+import java.io.FileInputStream;  
+import java.io.IOException;  
+import org.apache.poi.hssf.usermodel.HSSFSheet;  
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;  
+import org.apache.poi.ss.usermodel.Cell;  
+import org.apache.poi.ss.usermodel.FormulaEvaluator;  
+import org.apache.poi.ss.usermodel.Row;  
+public class ReadExcelFileDemo  
+{  
+public static void main(String args[]) throws IOException  
+{  
+//obtaining input bytes from a file  
+FileInputStream fis=new FileInputStream(new File("C:\\demo\\student.xls"));  
+//creating workbook instance that refers to .xls file  
+HSSFWorkbook wb=new HSSFWorkbook(fis);   
+//creating a Sheet object to retrieve the object  
+HSSFSheet sheet=wb.getSheetAt(0);  
+//evaluating cell type   
+FormulaEvaluator formulaEvaluator=wb.getCreationHelper().createFormulaEvaluator();  
+for(Row row: sheet)     //iteration over row using for each loop  
+{  
+for(Cell cell: row)    //iteration over cell using for each loop  
+{  
+switch(formulaEvaluator.evaluateInCell(cell).getCellType())  
+{  
+case Cell.CELL_TYPE_NUMERIC:   //field that represents numeric cell type  
+//getting the value of the cell as a number  
+System.out.print(cell.getNumericCellValue()+ "\t\t");   
+break;  
+case Cell.CELL_TYPE_STRING:    //field that represents string cell type  
+//getting the value of the cell as a string  
+System.out.print(cell.getStringCellValue()+ "\t\t");  
+break;  
+}  
+}  
+System.out.println();  
+}  
+}  
+}  
+
+
+
+___________read xlsx file___________
+import java.io.File;  
+import java.io.FileInputStream;  
+import java.util.Iterator;  
+import org.apache.poi.ss.usermodel.Cell;  
+import org.apache.poi.ss.usermodel.Row;  
+import org.apache.poi.xssf.usermodel.XSSFSheet;  
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;  
+public class XLSXReaderExample  
+{  
+public static void main(String[] args)   
+{  
+try  
+{  
+File file = new File("C:\\demo\\employee.xlsx");   //creating a new file instance  
+FileInputStream fis = new FileInputStream(file);   //obtaining bytes from the file  
+//creating Workbook instance that refers to .xlsx file  
+XSSFWorkbook wb = new XSSFWorkbook(fis);   
+XSSFSheet sheet = wb.getSheetAt(0);     //creating a Sheet object to retrieve object  
+Iterator<Row> itr = sheet.iterator();    //iterating over excel file  
+while (itr.hasNext())                 
+{  
+Row row = itr.next();  
+Iterator<Cell> cellIterator = row.cellIterator();   //iterating over each column  
+while (cellIterator.hasNext())   
+{  
+Cell cell = cellIterator.next();  
+switch (cell.getCellType())               
+{  
+case Cell.CELL_TYPE_STRING:    //field that represents string cell type  
+System.out.print(cell.getStringCellValue() + "\t\t\t");  
+break;  
+case Cell.CELL_TYPE_NUMERIC:    //field that represents number cell type  
+System.out.print(cell.getNumericCellValue() + "\t\t\t");  
+break;  
+default:  
+}  
+}  
+System.out.println("");  
+}  
+}  
+catch(Exception e)  
+{  
+e.printStackTrace();  
+}  
+}  
+}  
+
+
+
+___________read perticular cell
+
+
+//reading value of a particular cell  
+import java.io.FileInputStream;  
+import java.io.FileNotFoundException;  
+import java.io.IOException;  
+import org.apache.poi.ss.usermodel.Cell;  
+import org.apache.poi.ss.usermodel.*;  
+import org.apache.poi.ss.usermodel.Sheet;  
+import org.apache.poi.ss.usermodel.Workbook;  
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;  
+public class ReadCellExample   
+{  
+public static void main(String[] args)   
+{  
+ReadCellExample rc=new ReadCellExample();   //object of the class  
+//reading the value of 2nd row and 2nd column  
+String vOutput=rc.ReadCellData(2, 2);   
+System.out.println(vOutput);  
+}  
+//method defined for reading a cell  
+public String ReadCellData(int vRow, int vColumn)  
+{  
+String value=null;          //variable for storing the cell value  
+Workbook wb=null;           //initialize Workbook null  
+try  
+{  
+//reading data from a file in the form of bytes  
+FileInputStream fis=new FileInputStream("C:\\demo\\EmployeeData.xlsx");  
+//constructs an XSSFWorkbook object, by buffering the whole stream into the memory  
+wb=new XSSFWorkbook(fis);  
+}  
+catch(FileNotFoundException e)  
+{  
+e.printStackTrace();  
+}  
+catch(IOException e1)  
+{  
+e1.printStackTrace();  
+}  
+Sheet sheet=wb.getSheetAt(0);   //getting the XSSFSheet object at given index  
+Row row=sheet.getRow(vRow); //returns the logical row  
+Cell cell=row.getCell(vColumn); //getting the cell representing the given column  
+value=cell.getStringCellValue();    //getting cell value  
+return value;               //returns the cell value  
+}  
+}  
+
+
+__________________________________________
+public class SplitExample{  
+public static void main(String args[]){  
+String s1="java string split method by javatpoint";  
+String[] words=s1.split("\\s");//splits the string based on whitespace  
+//using java foreach loop to print elements of string array  
+for(String w:words){  
+System.out.println(w);  
+}  
+}} 
+
+
+***_________
+public class SplitExample2{
+public static void main(String args[]){
+String s1="welcome to split world";
+System.out.println("returning words:");
+for(String w:s1.split("\\s",0)){
+System.out.println(w);
+}
+System.out.println("returning words:");
+for(String w:s1.split("\\s",1)){
+System.out.println(w);
+}
+System.out.println("returning words:");
+for(String w:s1.split("\\s",2)){
+System.out.println(w);
+}
+
+}}
+
+
+_____________________________________
+String fileName =  NameEnter.getText(); 
+Logger logger = Logger.getLogger("puzzleNumberGame.securityScreen");  
+FileHandler fh = new FileHandler(fileName);
+logger.addHandler(fh);
+logger.setLevel(Level.ALL);
+SimpleFormatter formatter = new SimpleFormatter();
+fh.setFormatter(formatter);
+logger.log(Level.WARNING,"My first log");
+_________________________________________
+package com.comparator; 
+import java.util.*; 
+public class Main { public static void main(String args[]) { 
+ArrayList al = new ArrayList(); al.add(new Student(101, "Vijay", 23)); 
+al.add(new Student(106, "Ajay", 27)); 
+al.add(new Student(105, "Jai", 21));
+ // Sorting elements on the basis of name Comparator cm1 = Comparator.comparing(Student::getName); 
+Collections.sort(al, cm1); System.out.println("Sorting by Name"); 
+for (Student st : al) { System.out.println(st.rollno + " " + st.name + " " + st.age); } 
+// Sorting elements on the basis of age Comparator cm2 = Comparator.comparing(Student::getAge);
+ Collections.sort(al, cm2); System.out.println("Sorting by Age"); 
+for (Student st : al) { 
+System.out.println(st.rollno + " " + st.name + " " + st.age); 
+} } } 
+
+
+
+
+
+package com.comparator; class Student { int rollno; String name; int age; Student(int rollno,String name,int age)
+{ this.rollno=rollno; this.name=name; this.age=age; } 
+public int getRollno() {
+ return rollno;
+ } public void setRollno(int rollno) { this.rollno = rollno; } 
+public String getName() { return name; } 
+public void setName(String name) { this.name = name; } 
+public int getAge() { return age; } 
+public void setAge(int age) 
+{ this.age = age; } }
+
+_____________________________________________________________
+
+import java.util.; 
+class Student implements Comparable { int rollno; String name; int age; 
+public Student(int rollno,String name,int age){ 
+this.rollno=rollno; this.name=name; this.age=age; 
+} 
+public int compareTo(Student st){ 
+if(age==st.age) return 0; else if(age>st.age) return 1; else return -1; 
+} } 
+
+
+import java.util.; 
+public class Test { public static void main(String args[]) { 
+ArrayList al=new ArrayList(); 
+al.add(new Student(101,"Vijay",23)); 
+al.add(new Student(106,"Ajay",27)); 
+al.add(new Student(105,"Jai",21)); 
+Collections.sort(al); 
+for(Student st:al) { 
+System.out.println(st.rollno+" "+st.name+" "+st.age); 
+} } }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+________________________________________
+[17:10] Darshini Nagaraju
+account.java
+
+[17:10] Darshini Nagaraju
+package com.htc.account;import com.htc.account.bank;import java.util.Objects;public class account {
+private int accountid;
+private String accountholder;
+private static double balance;
+static int lastassiged=0;public account() {
+super();
+// TODO Auto-generated constructor stub
+}
+public account(String accountholder) {
+super();
+lastassiged++;
+this.accountid =lastassiged ;
+this.accountholder = accountholder;
+this.balance = 1000.00;
+}
+@Override
+public String toString() {
+return "acccount [accountid=" + accountid + ", accountholder=" + accountholder + ", balance=" + balance + "]";
+}
+@Override
+public int hashCode() {
+return Objects.hash(accountholder);
+}
+@Override
+public boolean equals(Object obj) {
+if (this == obj)
+return true;
+if (obj == null)
+return false;
+if (getClass() != obj.getClass())
+return false;
+account other = (account) obj;
+return Objects.equals(accountholder, other.accountholder);
+}
+public int getAccountid() {
+return accountid;
+}
+public void setAccountid(int accountid) {
+this.accountid = accountid;
+}
+public String getAccountholder() {
+return accountholder;
+}
+public void setAccountholder(String accountholder) {
+this.accountholder = accountholder;
+}
+public double getBalance() {
+return balance;
+}
+public void setBalance(double balance) {
+this.balance = balance;
+}}
+
+[17:14] Darshini Nagaraju
+bank.java
+
+[17:14] Darshini Nagaraju
+package com.htc.account;
+import com.htc.account.account;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;public class bank {
+public static List<account> accounts=new ArrayList<>();
+//account a=new account();
+public bank() {
+super();
+// TODO Auto-generated constructor stub
+}public void addacc(account a) {
+accounts.add(a);
+}@Override
+public String toString() {
+return "bank [l=" + accounts + "]";
+}@Override
+public int hashCode() {
+return Objects.hash(accounts);
+}@Override
+public boolean equals(Object obj) {
+if (this == obj)
+return true;
+if (obj == null)
+return false;
+if (getClass() != obj.getClass())
+return false;
+bank other = (bank) obj;
+return Objects.equals(accounts, other.accounts);
+}public List<account> getL() {
+return this.accounts;
+}public void setL(List<account> l) {
+this.accounts = l;
+}
+public int getsize() {
+return this.accounts.size();
+}}
+
+[17:14] Darshini Nagaraju
+daoimpl class
+
+[17:14] Darshini Nagaraju
+package com.htc.dao;import com.htc.account.account;
+import com.htc.account.bank;
+import com.htc.exception.accountnotfoundException;
+import com.htc.exception.insufficientbalanceexception;
+public class daoimpl {
+bank b=new bank();
+public account checkAccount(int accountNo) throws Exception {
+int i;
+account c = null;
+for(i=0;i<b.getsize();i++) {
+if(accountNo==b.getL().get(i).getAccountid()) {
+c=b.getL().get(i);
+}
+else
+throw new accountnotfoundException("account doesn't exists");
+}
+return c; }
+public double getBalance( account account) throws Exception {
+account acc =checkAccount(account.getAccountid());
+if(acc!=null)
+return account.getBalance();
+else
+throw new accountnotfoundException("account id doesn't exists");
+}
+public void depositMoney(account account, double amount) throws Exception {
+account.setBalance(account.getBalance()+amount);
+}
+public boolean withdrawMoney(account account, double amount) throws Exception {
+double amt ;
+boolean flag=false;
+if(getBalance(account)>amount) {
+account.setBalance(account.getBalance()-amount);
+flag=true;
+return flag;
+}
+else
+return flag;
+}
+}
+
+[17:15] Darshini Nagaraju
+dao interface
+
+[17:15] Darshini Nagaraju
+package com.htc.dao;import com.htc.account.account;public interface daointerface {
+void createaccount();
+void deleteaccount();
+account checkAccount(String accountNo);
+double getBalance( account account);
+boolean depositMoney(account account, double amount);
+boolean withdrawMoney(account account, double amount);
+}
+
+[17:15] Darshini Nagaraju
+account notfoundexceptionclass
+
+[17:15] Darshini Nagaraju
+package com.htc.exception;public class accountnotfoundException extends Exception{
+public accountnotfoundException(String errorMessage) {
+super(errorMessage);
+}
+}
+
+[17:15] Darshini Nagaraju
+insufficient balance
+
+[17:16] Darshini Nagaraju
+package com.htc.exception;public class insufficientbalanceexception extends Exception {
+public insufficientbalanceexception(String errorMessage) {
+super(errorMessage);
+}
+}
+
+[17:16] Darshini Nagaraju
+service impl.java
+
+[17:16] Darshini Nagaraju
+package com.htc.service;public class serviceimpl {}
+
+[17:16] Darshini Nagaraju
+service interface
+
+[17:16] Darshini Nagaraju
+package com.htc.service;public class serviceinterface {}
+
+[17:17] Darshini Nagaraju
+test main class
+
+[17:17] Darshini Nagaraju
+package com.htc.Testclient;import java.util.Scanner;import com.htc.account.account;
+import com.htc.account.bank;
+import com.htc.dao.daoimpl;
+import com.htc.exception.insufficientbalanceexception;public class testmain {
+static Scanner s=new Scanner(System.in);public static void main(String[] args) throws Exception {
+daoimpl dimpl=new daoimpl();
+bank b=new bank();
+System.out.println("enter the account holder name ");
+String accountname=s.nextLine();
+account a=new account(accountname);
+System.out.println(a);
+b.addacc(a);
+System.out.println("enter the accountid to check details ");
+String accountnum=s.nextLine();
+int accountno=Integer.parseInt(accountnum);
+System.out.println("account details are " + dimpl.checkAccount(accountno));
+System.out.println("account balance is "+dimpl.getBalance(a));
+System.out.println("enter the amount to deposit");
+String amount=s.nextLine();
+int amt=Integer.parseInt(amount);
+dimpl.depositMoney(a,amt);
+System.out.println("balance after deposit is " + a.getBalance());
+System.out.println("enter the amount to withdraw");
+String amount1=s.nextLine();
+int amt1=Integer.parseInt(amount1);
+dimpl.withdrawMoney(a,amt1);
+System.out.println("balance after withdraw is " + a.getBalance());
+}
+}
+
+[17:18] Darshini Nagaraju
+[17:10] Darshini Nagarajuaccount.java[17:10] Darshini Nagarajupackage com.htc.account;import com.htc.account.bank;import java.util.Objects;public class account {
+private int accountid;
+private String accountholder;
+private static double balance;
+static int lastassiged=0;public account() {
+super();
+// TODO Auto-generated constructor stub
+}
+public account(String accountholder) {
+super();
+lastassiged++;
+this.accountid =lastassiged ;
+this.accountholder = accountholder;
+this.balance = 1000.00;
+}@Override
+public String toString() {
+return "acccount [accountid=" + accountid + ", accountholder=" + accountholder + ", balance=" + balance + "]";
+}
+@Override
+public int hashCode() {
+return Objects.hash(accountholder);
+}
+@Override
+public boolean equals(Object obj) {
+if (this == obj)
+return true;
+if (obj == null)
+return false;
+if (getClass() != obj.getClass())
+return false;
+account other = (account) obj;
+return Objects.equals(accountholder, other.accountholder);
+}
+public int getAccountid() {
+return accountid;
+}
+public void setAccountid(int accountid) {
+this.accountid = accountid;
+}
+public String getAccountholder() {
+return accountholder;
+}
+public void setAccountholder(String accountholder) {
+this.accountholder = accountholder;
+}
+public double getBalance() {
+return balance;
+}
+public void setBalance(double balance) {
+this.balance = balance;
+}}[17:14] Darshini Nagarajubank.java[17:14] Darshini Nagarajupackage com.htc.account;
+import com.htc.account.account;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;public class bank {
+public static List<account> accounts=new ArrayList<>();
+//account a=new account();public bank() {
+super();
+// TODO Auto-generated constructor stub
+}public void addacc(account a) {
+accounts.add(a);
+}@Override
+public String toString() {
+return "bank [l=" + accounts + "]";
+}@Override
+public int hashCode() {
+return Objects.hash(accounts);
+}@Override
+public boolean equals(Object obj) {
+if (this == obj)
+return true;
+if (obj == null)
+return false;
+if (getClass() != obj.getClass())
+return false;
+bank other = (bank) obj;
+return Objects.equals(accounts, other.accounts);
+}public List<account> getL() {
+return this.accounts;
+}public void setL(List<account> l) {
+this.accounts = l;
+}public int getsize() {
+return this.accounts.size();
+}}[17:14] Darshini Nagarajudaoimpl class[17:14] Darshini Nagarajupackage com.htc.dao;import com.htc.account.account;
+import com.htc.account.bank;
+import com.htc.exception.accountnotfoundException;
+import com.htc.exception.insufficientbalanceexception;
+public class daoimpl {
+bank b=new bank();
+public account checkAccount(int accountNo) throws Exception {
+int i;
+account c = null;
+for(i=0;i<b.getsize();i++) {
+if(accountNo==b.getL().get(i).getAccountid()) {
+c=b.getL().get(i);
+}
+else
+throw new accountnotfoundException("account doesn't exists");
+}
+return c;}
+public double getBalance( account account) throws Exception {
+account acc =checkAccount(account.getAccountid());
+if(acc!=null)
+return account.getBalance();
+else
+throw new accountnotfoundException("account id doesn't exists");
+}
+public void depositMoney(account account, double amount) throws Exception {
+account.setBalance(account.getBalance()+amount);
+}
+public boolean withdrawMoney(account account, double amount) throws Exception {
+double amt ;
+boolean flag=false;
+if(getBalance(account)>amount) {
+account.setBalance(account.getBalance()-amount);
+flag=true;
+return flag;
+}
+else
+return flag;
+}
+}[17:15] Darshini Nagarajudao interface[17:15] Darshini Nagarajupackage com.htc.dao;import com.htc.account.account;public interface daointerface {
+void createaccount();
+void deleteaccount();
+account checkAccount(String accountNo);
+double getBalance( account account);
+boolean depositMoney(account account, double amount);
+boolean withdrawMoney(account account, double amount);
+}[17:15] Darshini Nagarajuaccount notfoundexceptionclass[17:15] Darshini Nagarajupackage com.htc.exception;public class accountnotfoundException extends Exception{
+public accountnotfoundException(String errorMessage) {
+super(errorMessage);
+}
+}[17:15] Darshini Nagarajuinsufficient balance[17:16] Darshini Nagarajupackage com.htc.exception;public class insufficientbalanceexception extends Exception {
+public insufficientbalanceexception(String errorMessage) {
+super(errorMessage);
+}
+}[17:16] Darshini Nagarajuservice impl.java[17:16] Darshini Nagarajupackage com.htc.service;public class serviceimpl {}[17:16] Darshini Nagarajuservice interface[17:16] Darshini Nagarajupackage com.htc.service;public class serviceinterface {}[17:17] Darshini Nagarajutest main class[17:17] Darshini Nagarajupackage com.htc.Testclient;import java.util.Scanner;import com.htc.account.account;
+import com.htc.account.bank;
+import com.htc.dao.daoimpl;
+import com.htc.exception.insufficientbalanceexception;public class testmain {
+static Scanner s=new Scanner(System.in);public static void main(String[] args) throws Exception {
+daoimpl dimpl=new daoimpl();
+bank b=new bank();
+System.out.println("enter the account holder name ");
+String accountname=s.nextLine();
+account a=new account(accountname);
+System.out.println(a);
+b.addacc(a);
+System.out.println("enter the accountid to check details ");
+String accountnum=s.nextLine();
+int accountno=Integer.parseInt(accountnum);
+System.out.println("account details are " + dimpl.checkAccount(accountno));
+System.out.println("account balance is "+dimpl.getBalance(a));
+System.out.println("enter the amount to deposit");
+String amount=s.nextLine();
+int amt=Integer.parseInt(amount);
+dimpl.depositMoney(a,amt);
+System.out.println("balance after deposit is " + a.getBalance());
+System.out.println("enter the amount to withdraw");
+String amount1=s.nextLine();
+int amt1=Integer.parseInt(amount1);
+dimpl.withdrawMoney(a,amt1);
+System.out.println("balance after withdraw is " + a.getBalance());}
+}
+
+
+_______________________________________________
+
+
+
+try{
+InputStream fis=new FileInputStream(targetsFile);
+BufferedReader br=new BufferedReader(new InputStreamReader(fis));
+
+
+
+for (String line = br.readLine(); line != null; line = br.readLine()) {
+System.out.println(line);
+}
+
+
+
+br.close();
+}
+catch(Exception e){
+System.err.println("Error: Target File Cannot Be Read");
+}
+
+______________________________________________
+
+***prepared statement
+
+load = xcel to db
+unload = db to xcel

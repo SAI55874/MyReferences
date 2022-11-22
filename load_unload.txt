@@ -1,0 +1,48 @@
+
+
+
+
+Load and Unload operation 
+
+Load operation - Reading from a file and inserting to a table
+Unload operation:- Fetching the data from a table and writing to a file
+
+Employee file( excel file id , name , salary , DOB , mobile )
+
+Employee Table ( id, name , salary , DOB , mobile)
+
+
+
+Load operation 
+
+establish the DB connection( server ip address , port number , user id , password , DB name )
+open the employee file
+for loop for ( iterating the records in the emp file )
+    validate the records ( if salary >0 )
+        insert the record the is read from the employee file into employee table 
+end for loop 
+close the file
+
+
+Unload operation 
+
+
+
+establish the DB connection( server ip address , port number , user id , password , DB name )
+open the employee file
+for loop for ( fetching the records from employee table <-- cursor )
+            write the records thet is fetched from emp table to employee file
+end for loop
+save 
+
+close the file
+
+
+
+
+
+
+
+
+
+

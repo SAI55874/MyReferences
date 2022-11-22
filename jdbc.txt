@@ -1,0 +1,27 @@
+1) statement = "insert into employee value ("e1","hari",d3,500000) "
+2) preparedstatement pstmt = "insert into employee value (?,?,?,?) "
+   pstmt.setString(1, emp.getEmpId());
+   pstmt.setString(2, emp.getEmpName());
+   pstmt.setString(3, emp.getAddress());
+   pstmt.setString(4, emp.getDesignation())
+   pstmt.setFloat(5, emp.getSalary());
+ 
+3) Callablestement  cstmt="call insertEmployee(?,?,?,?)")
+   cstmt.setString(1, emp.getEmpId());
+   cstmt.setString(2, emp.getEmpName());
+   cstmt.setString(3, emp.getAddress());
+   cstmt.setString(4, emp.getDesignation())
+   cstmt.setFloat(5, emp.getSalary());
+
+
+/***************************************************************************/
+
+ 
+ create procedure insertEmployee(id,name,deptid,salary){
+
+      insert into employee value(id,name,deptid,salary)
+      
+     
+}  
+
+    

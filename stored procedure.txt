@@ -1,0 +1,60 @@
+CREATE OR REPLACE FUNCTION getEmployee(eid integer)
+RETURNS Table(empid integer,empname varchar(50),mail varchar(50)) AS
+$$
+BEGIN
+RETURN query SELECT id,name,email FROM employee WHERE id=eid;
+END
+$$
+language plpgsql;
+
+
+select * from getEmployee(3)
+
+select * from employee
+
+CREATE OR REPLACE FUNCTION getEmployees()
+RETURNS Table(empid integer,empname varchar(50),mail varchar(50)) AS
+$$
+BEGIN
+RETURN query SELECT id,name,email FROM employee ;
+END
+$$
+language plpgsql;
+
+CREATE OR REPLACE FUNCTION StoreEmployee(eid integer,ename varchar(50),emailid varchar(50),contact varchar(20) )
+RETURNS varchar(50) AS
+$$
+DECLARE i integer;
+BEGIN
+SELECT COUNT(id) INTO i from employee where id=eid;
+if(i=0) then
+INSERT INTO employee(id,name,email,phone)VALUES(eid,ename,emailid,contact);
+
+RETURN 	'added';
+END IF;
+RETURN 'not success';
+END;
+$$
+language plpgsql;
+
+drop function StoreEmployee
+
+
+select storeEmployee(4,'kamal','kamal@gmail.com','999876556')
+
+select * from employee
+
+CREATE OR REPLACE FUNCTION updateEmployee(eid integer,contact varchar(20))
+RETURNS INTEGER AS
+$$
+declare i INTEGER:=0;
+begin
+UPDATE employee set phone=contact WHERE id=eid;
+i:=1;
+RETURN i;
+END;
+$$
+language plpgsql;
+
+select updateEmployee(1,'9884912343')
+

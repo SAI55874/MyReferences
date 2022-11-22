@@ -1,0 +1,53 @@
+                
+                
+//
+establish the DB connection( server ip address , port number , user id , password , DB name )
+
+DBConnection dbconnect = new DBConnection();
+		Connection con = dbconnect.getConnection();
+		
+//open the employee file
+                FileInputStream fis = new FileInputStream("D:\\Employee.xls");
+		HSSFWorkbook workbook = new HSSFWorkbook(fis);
+		HSSFSheet sheet=workbook.getSheetAt(0);
+		//HSSsheet sheet = workbook.getSheet("Employee");
+		Iterator<Row> rows = sheet.iterator();
+		rows.next();
+//for loop for ( iterating the records in the emp file )
+
+		while(rows.hasNext()) <-- iterating the rows in the file 
+		{
+			Row row = rows.next();
+			Iterator<Cell> cells = row.cellIterator();
+			while(cells.hasNext()) <--- iterating the columns 
+			{
+				Cell cell = cells.next();
+				String empid = cell.getStringCellValue();
+				
+				cell = cells.next();
+				String empname = cell.getStringCellValue();
+				
+				cell = cells.next();
+				String address = cell.getStringCellValue();
+				
+				cell = cells.next();
+				String designation = cell.getStringCellValue();
+				
+				cell = cells.next();
+				float salary=(float) cell.getNumericCellValue();
+//        insert the record the is read from the employee file into employee table 
+			
+                          PreparedStatement pstmt = con.prepareStatement("insert into employee values(?,?,?,?,?)");
+		          pstmt.setString(1, emp.getEmpId());
+	                   pstmt.setString(2, emp.getEmpName());
+		        pstmt.setString(3, emp.getAddress());
+	              	pstmt.setString(4, emp.getDesignation());
+		        pstmt.setFloat(5, emp.getSalary());
+	         	pstmt.execute();
+				
+ 			}
+//end for loop 
+
+		
+
+

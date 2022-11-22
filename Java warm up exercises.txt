@@ -1,0 +1,557 @@
+JAVA warm up exercises
+
+DAY 1
+3. An employee is considered for on-site depending on these conditions
+
+import java.io.IOException;
+import java.util.Scanner;
+import java.util.logging.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.FileHandler;
+import java.util.logging.SimpleFormatter;
+
+
+public class Warmup {
+public static void main(String[] args)
+{
+	
+	Logger loger = Logger.getLogger("logger");
+	FileHandler fh;
+	Logger logger = Logger.getLogger(Warmup.class.getName());
+	
+Scanner sc=new Scanner(System.in);
+
+try {
+fh = new FileHandler("d:\\logger\\logfile");
+logger.addHandler(fh);
+SimpleFormatter formatter = new SimpleFormatter();
+fh.setFormatter(formatter);
+}
+catch (SecurityException e) {
+e.printStackTrace();
+}catch (IOException e) {
+e.printStackTrace();
+}
+
+System.out.println("Does an employee have passport?");
+String s1=sc.next();
+
+if (s1.equalsIgnoreCase("yes"))
+{
+   	System.out.println("Is communication good?");
+   	
+    String s2=sc.next();
+    if(s2.equalsIgnoreCase("yes"))
+    {
+    System.out.println("Is feedback good?");
+    String s3=sc.next();
+        if(s3.equalsIgnoreCase("yes"))
+        {
+        System.out.println("Enter your experience in years");
+int x=sc.nextInt();
+            if(x>=2)
+            {
+            System.out.println("Enter your age");
+int age=sc.nextInt();
+                if (age>=23)
+                {
+                	logger.log(Level.INFO, "You are eligible to go on site");
+                }
+            }
+        }
+     }
+}
+else
+{
+System.out.println("You are not eligible to go on-site");
+}
+}
+}
+
+
+6. Implement the following logic to arrive at the loan eligibility for an employee:
+
+
+import java.io.IOException;
+import java.util.Scanner;
+import java.util.logging.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.FileHandler;
+import java.util.logging.SimpleFormatter;
+
+public class Warmup {
+
+	public static void main(String[] args) {
+		Logger loger = Logger.getLogger("logger");
+		FileHandler fh;
+		Logger logger = Logger.getLogger(Warmup.class.getName());
+		Scanner sc = new Scanner(System.in);
+		try {
+			fh = new FileHandler("d:\\logger\\warmuplog");
+			logger.addHandler(fh);
+			SimpleFormatter formatter = new SimpleFormatter();
+			fh.setFormatter(formatter);
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		System.out.println("permanent job");
+		String s1 = sc.next();
+		if (s1.equals("yes")) {
+			System.out.println("unmarried");
+			String s2 = sc.next();
+			if (s2.equals("yes")) {
+				System.out.println("Enter the experience in years");
+				int x = sc.nextInt();
+				if (x >= 30) {
+					System.out.println("You are eligible for 50,000 loan");
+				} else {
+					System.out.println("You are eligible for 25,000 loan");
+				}
+			} else {
+				System.out.println("Enter the experience in years");
+				int x = sc.nextInt();
+				if (x >= 30) {
+					System.out.println("You are eligible for 60,000 loan");
+				} else {
+					System.out.println("You are eligible for 35,000 loan");
+				}
+			}
+
+		} else {
+			logger.log(Level.INFO, "You are eligible for 10,000 loan");
+		}
+	}
+}
+	
+
+7. Implement the following logic:(DO NOT use logical operators). The mode of transport for dispatching materials should be selected on the following basis:
+
+import java.io.IOException;
+import java.util.Scanner;
+import java.util.logging.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.FileHandler;
+import java.util.logging.SimpleFormatter;
+
+public class Warmup {
+	public static void main(String[] args) {
+		Logger loger = Logger.getLogger("logger");
+		FileHandler fh;
+		Logger logger = Logger.getLogger(countprime.class.getName());
+		Scanner sc = new Scanner(System.in);
+		try {
+			fh = new FileHandler("D:\\logger\\warmuplog");
+			logger.addHandler(fh);
+			SimpleFormatter formatter = new SimpleFormatter();
+			fh.setFormatter(formatter);
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		System.out.println("Priority: If not urgent, enter 2, If urgent, enter 1");
+		int priority = sc.nextInt();
+
+		System.out.println("Enter weight in kgs");
+		int x = sc.nextInt();
+		System.out.println("Enter distance in kms");
+		int y = sc.nextInt();
+		if (priority == 2 && x <= 5) {
+			logger.log(Level.INFO, "Dispatch by post");
+		} else if (priority == 2 && x > 5 && y <= 250) {
+			System.out.println("Select a lorry");
+		}
+
+		else if (priority == 1 && x < 100 && y < 50) {
+			System.out.println("Select a van");
+		} else {
+			logger.log(Level.INFO, "Use a train");
+		}
+	}
+}
+
+
+DAY 2
+
+2.Check if a given number is prime or not. 
+
+import java.io.IOException;
+import java.util.Scanner;
+import java.util.logging.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.FileHandler;
+import java.util.logging.SimpleFormatter;
+
+public class Warmup {
+	public static void main(String[] args) {
+		Logger loger = Logger.getLogger("logger");
+		FileHandler fh;
+		Logger logger = Logger.getLogger(countprime.class.getName());
+
+		int num;
+		Scanner input = new Scanner(System.in);
+
+		try {
+			fh = new FileHandler("d:\\logger\\warmuplog");
+			logger.addHandler(fh);
+			SimpleFormatter formatter = new SimpleFormatter();
+			fh.setFormatter(formatter);
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		System.out.println("Enter a number:");
+		num = input.nextInt();
+		int flag = 0;
+		// condition for non prime number
+		if (num <= 1) {
+			logger.log(Level.INFO, num + " is not a prime number");
+		} else {
+			for (int i = 2; i <= num / 2; i++) {
+				if (num % i == 0) {
+					logger.log(Level.INFO, num + " is not a prime number");
+					flag = 1;
+					break;
+				}
+			}
+			if (flag == 0)
+				logger.log(Level.INFO, num + " is a prime number");
+		}
+
+	}
+}
+
+
+
+3. Display all the prime numbers between x and y.
+
+import java.util.Scanner; 
+public class Main {
+    public static void main(String[] args) {
+        
+        Scanner input = new Scanner(System.in);
+        System.out.println("Enter the first number:");
+        int x= input.nextInt();
+        
+        Scanner input2 = new Scanner(System.in);
+        System.out.println("Enter the last number:");
+        int y= input2.nextInt();
+        while(x<y){
+            int flag = 0;
+            for(int i = 2; i<=x/2; i++){
+                if(x%i==0){
+                    flag = 1;
+                    break;
+                }
+            }
+        if(flag==0 && x!=0 && x!=1)
+        System.out.println(x+" is a prime number");
+        x++;
+        }
+    }
+}
+
+6.Count the number of prime numbers in an array.
+
+
+public class countprime{
+	public static void main(String[]args) { 
+		int i,j,b,arr[]= {2,3,4,5,6,7,8,11,23,1,0},count=0;
+		int arrlist=arr.length;
+		for(i=0;i<arrlist;i++) {
+			j=2;
+			b=1;
+			while(j<arr[i])
+			{
+				if(arr[i]%j==0)
+				{
+					b=0;
+					break;
+				}
+				j++;
+			}
+			if(b==1 && arr[i]!=0 && arr[i]!=1) {
+				count=count+1;
+			    
+			    			}
+				
+			}
+		System.out.println("Count of Prime Numbers: "+count);
+		}
+	
+	       
+	}
+
+Day 4
+
+5.import java.util.Scanner; 
+public class Warmup {
+    public static void main(String[] args) {
+        
+        Scanner input = new Scanner(System.in);
+        System.out.println("Type a sentence:");
+        String sentence= input.nextLine();
+        char search = ' ';
+        int count=0;
+        String sentencewithoutlastcharacter=sentence.substring(1,sentence.length()-1);
+        boolean dotflag = sentencewithoutlastcharacter.contains(".");
+        
+        for(int i=0; i<sentence.length(); i++) {
+        	if(search==sentence.charAt(i))
+        		count++;
+        } 		
+        
+        
+        
+        if(sentence.length()<10)
+        		System.out.println("A sentence atleast has 10 characters");
+        
+        else if(sentence.charAt(sentence.length()-1)!='.')
+        	System.out.println("A sentence should end with dot");
+        
+        else if (sentence.charAt(0)==' ')
+        	System.out.println("A sentence should not start with space");
+        	
+        else if(sentence.charAt(sentence.length()-1)==' ')
+                System.out.println("A sentence should not end with space");
+        
+        else if(count<1)
+        	System.out.println("A sentence should have atleast one space");
+
+        else if(dotflag==true)
+        	System.out.println("A sentence should not have dot in between");
+       
+        else
+        	System.out.println("valid sentence");
+    }
+    }
+
+4.
+
+import java.util.Scanner; 
+public class Warmup {
+    public static void main(String[] args) {
+        
+        Scanner input = new Scanner(System.in);
+        System.out.println("Enter your email address:");
+        String email= input.nextLine();
+        char search = '@';
+        
+        int count=0;
+        
+        
+        for(int i=0; i<email.length(); i++) {
+        	if(search==email.charAt(i))
+        		count++;
+        } 	
+        if(condtion1)
+            if(condition2)
+               if(condition3)
+                  .....
+                else
+        
+           else	
+        
+        if (email.charAt(0)=='.' && email.charAt(0)=='@')
+        	System.out.println("An email should not start with dot or @");
+        	
+        else if(email.charAt(email.length()-1)!='m') 
+        	System.out.println("An email should end with m or n");
+       
+       else if(count>1)
+        	System.out.println("An email should have only one @");
+        
+        else if(email.length()<10)
+    		System.out.println("An email address should be in between 10 to 30 characters");
+        
+        else if(email.length()>30)
+    		System.out.println("An email address should be in between 10 to 30 characters");
+        
+        else
+        	System.out.println("valid email address");
+    }
+    }
+
+--------------------------------------OR-----------------------------------------------
+
+
+import java.util.Scanner; 
+public class Warmup {
+    public static void main(String[] args) {
+        
+        Scanner input = new Scanner(System.in);
+        System.out.println("Enter your email address:");
+        String email= input.nextLine();
+        char search = '@';
+        
+        int count=0;
+        
+        
+        for(int i=0; i<email.length(); i++) {
+        	if(search==email.charAt(i))
+        		count++;
+        } 	
+        if(email.charAt(0)!='.' && email.charAt(0)!='@') {
+        	
+        	if(email.charAt(email.length()-1)=='m' || email.charAt(email.length()-1)=='n') {
+        		
+        		if(count<2) {
+        			
+        			if(10<email.length()) {
+        				
+        				if(email.length()<30) {
+        					
+        					System.out.println("Valid email address");
+        				}
+        				else
+        				{
+        					System.out.println("An email length should be less than 30 characters");
+        				}
+        			}
+        			else {
+        				System.out.println("An email length should be more than 10 characters");
+        			}
+        		}
+        		else {
+        		System.out.println("An email should have only one @");
+        		}
+        		
+        	}
+        	else {
+        		System.out.println("An email should end with m or n");
+        	}
+        }
+        else {
+        	System.out.println("An email should not start with dot or @");
+        }
+        
+
+    }
+    }
+        
+        	
+
+
+
+import java.util.Scanner;
+public class Warmup {
+	public static void main(String[] args) {
+		
+	
+
+	Scanner s1= new Scanner(System.in);
+	 String id1 =s1.nextLine();
+	int size=id1.length();
+	 String id2="@";
+	 if(id1.contains("@"))
+	 {
+	 if(id1.indexOf('.')>id1.indexOf('@'))
+	 {
+	 if(id1.indexOf('_')<id1.indexOf('@'))
+	 {
+	if(id1.length()>10 || 
+	id1.length()<30)
+	{
+	 if(size>10&&size<30) 
+	 {
+	 System.out.println("true");
+	 }
+	 else
+	 {
+	 System.out.println("email id should have minimun 10 and maximum 30 character");
+	 }
+	 }
+	else
+	{
+	 System.out.println("_ should be before @");
+	 }
+	 }
+	 else 
+	 {
+	 System.out.println(". should be after @");
+	 }
+	 }
+	 else
+	 {
+	 System.out.println("@ should be mentioned");
+	 }
+	 }
+	}
+}
+
+
+
+
+Logger example:
+
+
+import java.io.IOException;
+import java.util.Scanner;
+import java.util.logging.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.FileHandler;
+import java.util.logging.SimpleFormatter;
+
+
+
+public class Warmup
+{
+public static void main(String[] args)
+
+{
+
+Logger loger = Logger.getLogger("logfile");
+FileHandler fh;
+Logger logger = Logger.getLogger(Warmup.class.getName());
+Scanner sc=new Scanner(System.in);
+try {
+fh = new FileHandler("d:\\logger\\logfile");
+logger.addHandler(fh);
+SimpleFormatter formatter = new SimpleFormatter();
+fh.setFormatter(formatter);
+}catch (SecurityException e) {
+e.printStackTrace();
+}catch (IOException e) {
+e.printStackTrace();
+}
+System.out.println("Do you have passport");
+String s1=sc.next();
+if(s1.equalsIgnoreCase("yes"))
+{
+System.out.println("How is your communication");
+String s2=sc.next();
+if(s2.equalsIgnoreCase("good"))
+{
+System.out.println("How is your training feedback");
+String s3=sc.next();
+if(s3.equalsIgnoreCase("good"))
+{
+System.out.println("How many years of experience do u have");
+int exp=sc.nextInt();
+if(exp>=2)
+{
+System.out.println("What is your age");
+int age=sc.nextInt();
+if(age>=23)
+{
+logger.log(Level.INFO, s3 +"You are eligible");
+}
+}
+}
+}
+}
+else
+{
+System.out.println("You are not eligible");
+}
+}
+}
+        	
