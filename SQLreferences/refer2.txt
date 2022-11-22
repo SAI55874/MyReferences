@@ -1,0 +1,306 @@
+                          --SQL-REVIEW TOPICS WITH EXAMPLES--
+
+                                    Joins ,
+                                    Sub query,
+                                    Rank,
+                                    Dense_rank,
+                                    Pivot,
+                                    Crasstab,
+                                    Case statements,
+                                    Rollup,
+                                    Cube,
+                                    Topend analysis(NOT MENCTIONED).
+
+
+
+
+
+               Sub query----->
+
+       /*1 which category has maximume products*/
+
+       SELECT CATEGORY_CODE,COUNT(PRODUCT_CODE) AS "MAX_PRODUCT"
+       FROM PRODUCT
+       GROUP BY CATEGORY_CODE
+       HAVING COUNT(PRODUCT_CODE)>=ALL (SELECT COUNT(PRODUCT_CODE)
+                                        FROM PRODUCT
+                                        GROUP BY CATEGORY_CODE
+	                                );
+
+                 Joins------>
+
+        /* 15.	Which customer made the costliest order? */ 
+       
+       SELECT c.customer_code,customer_name,SUM(p.price*od.qty_ordered) AS 'total_bill'
+       FROM customer c
+       JOIN order_master om
+       ON c.customer_code=om.customer_code
+       JOIN order_detail od
+       ON od.order_code=om.order_code
+       JOIN product p
+       ON p.product_code=od.product_code
+       GROUP BY c.customer_code
+       HAVING SUM(p.price*od.qty_ordered)>=ALL( SELECT SUM(p.price*od.qty_ordered) AS 'total_bill'
+                                               FROM customer c
+                                               JOIN order_master om
+                                               ON c.customer_code=om.customer_code
+                                               JOIN order_detail od
+                                               ON od.order_code=om.order_code
+                                               JOIN product p
+                                               ON p.product_code=od.product_code
+                                               GROUP BY c.customer_code)
+
+                    Ranks------>
+
+        /*6 Which category has lot of products*/ 
+
+         SELECT  CATEGORY_CODE, SUM(QTY_ON_HAND) AS "LOT_OF_PRODUCTS", RANK() OVER (ORDER BY SUM(qty_on_hand)DESC)RNK
+         FROM product
+         GROUP BY category_code
+         ORDER BY SUM(qty_on_hand)DESC
+
+
+                   DENSE_RANK----->
+
+
+       /* 20.	Which country has minimum branches? */ 
+
+                SELECT country_name,"maximume_branches"
+                     FROM (SELECT c.country_name,COUNT(b.branch_code) AS "max_branches",DENSE_RANK() OVER(ORDER BY COUNT(b.branch_code)ASC) AS RNK
+                    FROM country c
+                   JOIN branch b
+                   ON c.country_code=b.country_code
+                   GROUP BY c.country_name)TMP
+                   WHERE RNK<=1
+
+        /*43. What is the frequently ordered product by the most active customer?*/ 
+
+       SELECT customer_code,customer_name,'orders' FROM (SELECT c.customer_code,customer_name,COUNT(om.order_code) AS 'orders'
+       ,DENSE_RANK() OVER(ORDER BY COUNT (om.order_code)DECS)AS RNK
+       FROM customer c
+       JOIN order_master om
+       ON c.customer_code=om.customer_code
+       GROUP BY c.customer_code)TMP
+       WHERE RNK=1
+
+       /*49. Find the Top-10 active customers based on no. of orders?*/ M
+
+       SELECT customer_name, orderc
+       FROM(SELECT cu.customer_name, COUNT(om.order_code) AS "orderc",
+       DENSE_RANK() OVER(ORDER BY COUNT(om.order_code) DESC) Rnk
+       FROM customer cu
+       JOIN order_master om
+       ON cu.customer_code = om.customer_code
+       GROUP BY cu.customer_code) TMP
+       WHERE Rnk<=10
+
+                    CROSS_TAB------->
+
+
+       	/*CREATE EXTENSION TABLEFUNC;*/
+         select * from crosstab(
+         'SELECT sr.salesrep_id,sr.salesrep_name,EXTRACT(MONTH FROM om.order_date),SUM(od.qty_ordered*pr.price)
+         FROM salesrep sr JOIN order_master om
+         ON sr.salesrep_id=om.salesrep_id
+         JOIN order_detail od
+         ON om.order_code=od.order_code
+         JOIN product pr
+         ON od.product_code=pr.product_code
+         WHERE EXTRACT(YEAR FROM om.order_date)=2010
+         GROUP BY sr.salesrep_id,sr.salesrep_name,EXTRACT(MONTH FROM om.order_date) order by 1',
+         'select m from generate_series(1,12) m'
+                     ) as (
+                     salesrep_id varchar,
+                     salesrep_name varchar,
+                     "Jan" int,
+                     "Feb" int,
+                     "Mar" int,
+                     "Apr" int,
+                     "May" int,
+                     "Jun" int,
+                     "Jul" int,
+                     "Aug" int,
+                     "Sep" int,
+                     "Oct" int,
+                     "Nov" int,
+                     "Dec" int);
+
+
+                     ROLL_UP----->
+
+         44.	Using ROLL UP and CUBE
+                Generate a report:
+
+                Project ID	Role ID	No of Employees
+
+
+               SELECT PROJECT_ROLL_ID,COUNT(EMP_ID) AS 'NO OF EMPLOYEES'
+               FROM ALLOCATION
+               GROUP BY ROLLUP (PROJECT_ID,ROLL_ID)
+               ORDER BY PROJECT_ID,ROLE_ID
+
+
+                      CUBE------>
+
+
+           44.	Using ROLL UP and CUBE
+                Generate a report:
+
+                Project ID	Role ID	No of Employees
+
+
+                SELECT PROJECT_ROLL_ID,COUNT(EMP_ID) AS 'NO OF EMPLOYEES'
+                FROM ALLOCATION
+                GROUP BY CUBE (PROJECT_ID,ROLL_ID)
+                ORDER BY PROJECT_ID,ROLE_ID
+
+
+
+
+
+
+
+
+
+                     CORRELATED SUBQUERY AND WITH CLAUSE-------->
+
+        /*40.	Using Correlated Subquery and WITH clause
+        Find all employees who earns more than the average salary of his/her department?*/
+
+                       WITH TMP AS 
+                    (SELECT DEPT_ID,AVG(SALARY)AS AVG DEP OF SALARY
+                     FROM EMPLOYEE
+                     GROUP BY DEPT_ID)SELECT EMP_ID,SALARY,AVG DEP OF SALARY
+                  FROM EMPLOYEE
+                  INNER JOIN TMP
+                  ON EMPLOYEE.DEPT_ID=TMP.DEPT_ID
+                  WHERE SALARY>AVG DEP OF SALARY
+
+
+                   HIERARCHICAL REPORT-------->
+
+         /*46.	Prepare a hierarchical report:
+
+                     LEVEL    EMPLOYEE
+
+                       1	raja
+                       2	anil
+                       3	anjali
+
+
+            ( hint: start with emp_name='raja' )*/
+
+                  WITH RECURSIVE subordinates AS (
+                  SELECT 1 AS n,emp_id,mgr_id,emp_name
+                  FROM employee
+                  WHERE emp_name LIKE 'raja%'
+                  UNION
+                  SELECT s.n+1,e.emp_id,e.mgr_id,e.emp_name
+                  FROM employee e
+                  INNER JOIN subordinates s ON s.emp_id = e.mgr_id
+                  ) SELECT *FROM subordinates;
+
+
+                    CASE STATEMENTS------>
+
+          /*47.	Using CASE/DECODE
+
+              Emp ID	Number of Skills	Description
+
+              If Employee have,
+
+              i)	more than 5 no of skills: Description is �Major Resource�
+             ii)	more than 3 no of skills : Description is �Useful Resource�
+            iii)	more than 1 no of skills : Description is �Resource�*/
+
+
+
+            SELECT EMP_ID,COUNT(SKILL_ID) AS "NO. OF SKILLS",
+            CASE
+                 WHEN COUNT(SKILL_ID)>5 THEN 'MAJOR RESOURCE'
+                 WHEN COUNT(SKILL_ID)>3 THEN 'USEFUL RESOURCE'
+                 WHEN COUNT(SKILL_ID)>1 THEN 'RESOURCE'
+            END DESCRIPTION
+            FROM EMPLOYEESKILL
+            GROUP BY EMP_ID
+
+
+                       PIVOT------>
+
+
+           Definition:- 
+ 
+                *Rotates data from rows to columns
+                *Ideal for reporting
+                *Easier to analyse data or visualise trends
+
+           Syntex:-
+
+                 SELECT <column/s>
+                 FROM
+                 (
+                  <source_query>
+                 )
+                 PIVOT
+                 (
+                  <aggrigate_function>(<aggrigate_column>
+                  FOR
+                  <spreading_column> IN (<spreading_elements>) 
+            Example:-1
+
+                  SELECT
+                        customer_id,
+                        ,[January]
+                        ,[Febrary]
+                        ,[March] 
+                  FROM
+                  (
+                    SELECT 
+                          customer_id
+                          ,DATENAME(MONTH,sales_date) AS Month"
+                          ,Sales_Amount
+                    FROM dbo.sales
+                  ) AS "source_table"
+                  PIVOT
+                  (
+                    SUM(Sales_Amount)
+                    FOR [MONTH] IN ([January],[Febrary],[March])
+                  ) AS "pivot_table"
+     
+            Example:-2
+
+           SELECT ID,[Name],[gender],[salary]
+           FROM
+           (SELECT ID,Name as EName,Value
+           FROM dbo.emp) as "Source_table"
+           PIVOT
+           (MAX(Value)
+           FOR
+           EName in([Name],[gender],[salary])
+           ) as "Pivot_table"
+
+
+            Example:-
+
+            Table Name:dbo.emp
+            
+            Name   Value    ID
+
+         1   Name   adam     1
+         2  Gender  Male     1           Result---->   ID    Name     Gender    Salary
+         3  salary  5000     1                          1    adam      Male     5000
+
+
+
+
+
+      
+
+
+       
+
+        
+
+         
+
+       

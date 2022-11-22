@@ -1,0 +1,997 @@
+SELECT
+FROM
+WHERE
+GROUP BY
+HAVING
+ORDERBY
+
+
+
+
+
+CREATE TABLE book_table (
+    book_no INT,
+    book_name VARCHAR(25),
+    member_code INT,
+    member_name VARCHAR(255),
+    date_of_issue INT,
+    date_of_return INT,
+    publisher_code INT,
+	publisher_name INT
+);
+INSERT INTO book_table (
+	book_no,
+    book_name,
+    member_code,
+    member_name,
+    date_of_issue,
+    date_of_return
+    )
+VALUES ('123','Skagen 21','102','saikumar','2022/03/13','2022/03/16','Tom B. Erichsen','4006');
+VALUES ('123','The legend','102','saikumar','2022/03/13','2022/03/16','Tom B. Erichsen','4006');
+VALUES ('123','Frobes','102','saikumar','2022/03/13','2022/03/16','Tom B. Erichsen','4006');
+VALUES ('123','Most wanted','102','saikumar','2022/03/13','2022/03/16','Tom B. Erichsen','4006');
+VALUES ('123','Harry potter','102','saikumar','2022/03/13','2022/03/16','Tom B. Erichsen','4006');
+
+
+
+SELECT book_no
+	   ,member_code
+       ,book_name
+       ,publisher_code
+       ,publisher_name
+       ,member_name
+       ,date_of_issue
+       ,date_of_return
+FROM book_table
+
+__________________________________________________________________________________________________________________________________________________________
+
+
+
+
+SELECT salesrep_id,
+		COUNT(order_code) AS 'number_of_orders'
+FROM order_master
+GROUP BY salesrep_id
+HAVING COUNT(order_code) >= 10
+ORDER BY number_of_orders DESC
+
+
+
+__________________________________________________________________
+
+
+
+
+
+SELECT order_code,
+		COUNT(product_code) AS product_count
+FROM order_detail
+GROUP BY order_code
+
+
+////
+SELECT customer_code,
+customer_name,
+credit_limit
+FROM customer
+WHERE customer_code=(SELECT customer_code
+FROM order_master
+WHERE order_code=( SELECT order_code
+FROM order_detail od 
+JOIN product pdt
+ON od.product_code = pdt.product_code
+GROUP BY Order_date
+HAVING ORDER_DATE-"2022-04-17"
+ORDER BY SUM( qty_ordered*price ) DESC))
+
+
+____________________________________________________________________
+
+
+SELECT salesrep_id,
+		COUNT(order_code) AS 'number_of_orders'
+FROM order_master
+GROUP BY salesrep_id
+HAVING COUNT(order_code) >= 1
+ORDER BY number_of_orders DESC
+
+_________________________________________________________________________
+
+1. Which category has maximum products
+
+
+SELECT category_code
+FROM(SELECT category_code
+	,RANK() OVER( ORDER BY category_code DESC) AS rn
+FROM product
+GROUP BY category_code) A
+WHERE rn=1
+
+
+
+
+_______________________________________________________________
+2. Which category has minimum products?
+
+SELECT category_code
+FROM(SELECT category_code
+	,RANK() OVER( ORDER BY category_code ASC) AS rn
+FROM product
+GROUP BY category_code) A
+WHERE rn=1
+
+
+___________________________________________________________________
+
+3.Which category has no products?
+
+
+
+
+
+SELECT category.category_desc
+		,COUNT(product.category_code) AS 'products'
+FROM product
+RIGHT OUTER JOIN category
+ON
+category.CATEGORY_CODE=product.category_code
+GROUP BY category.category_desc
+HAVING COUNT(product.category_code) = 0
+ORDER BY products ASC;
+
+-----------------
+
+SELECT category.category_desc
+		,COUNT(product.category_code) AS 'products'
+FROM product
+RIGHT OUTER JOIN category
+ON
+category.CATEGORY_CODE = product.category_code
+WHERE category.category_code NOT IN (SELECT category_code
+					FROM product)
+GROUP BY category.category_desc;
+
+
+
+
+_______________________________________________________________________
+4. Which is the costliest product?
+
+
+SELECT A.product_code
+		,A.price
+FROM
+(SELECT product_code
+	,price
+        ,RANK() OVER(ORDER BY price DESC) AS rk
+FROM product) A
+WHERE rk=1;
+
+
+
+
+_______________________________________________________________________
+5. Which category has costliest product?
+
+
+
+
+
+SELECT category.category_desc
+		,MAX(product.price) AS 'costliest product'
+FROM product
+JOIN category 
+ON category.CATEGORY_CODE=product.category_code
+
+
+
+_______________________________________________________________________
+6. Which category has lot of products (with respect to quantity on hand)?
+
+
+
+
+SELECT A.category_code
+FROM
+(SELECT category_code
+        ,SUM(qty_on_hand) AS 'total_products_of_Category'
+        ,RANK() OVER(ORDER BY SUM(qty_on_hand) DESC) AS rk
+FROM product
+GROUP BY category_code) A
+WHERE rk=1;
+
+
+
+_______________________________________________________________________
+7. Category wise display the costliest products?
+
+
+
+SELECT category.category_desc
+		,product.PROD_DESC
+        ,MAX(product.PRICE) AS 'costly items by each category'
+FROM product
+JOIN category
+ON
+category.CATEGORY_CODE=product.category_code
+GROUP BY category.CATEGORY_DESC
+ORDER BY price DESC
+
+
+  
+
+
+_______________________________________________________________________
+8. Category wise display the product whose quantity on hand is minimum?
+
+
+
+SELECT category.category_desc
+        ,MIN(product.qty_on_hand) AS 'Minimum quntity'
+FROM product
+JOIN category
+ON category.CATEGORY_CODE=product.category_code
+GROUP BY category.CATEGORY_DESC
+ORDER BY product.QTY_ON_HAND DESC;
+
+
+
+___________________________________________________________________________	
+9. Which order has maximum products?
+
+
+
+
+SELECT A.order_code
+FROM
+(SELECT order_code
+		,COUNT(product_code)
+        ,RANK() OVER(ORDER BY COUNT(product_code) DESC) AS rk
+FROM order_detail
+GROUP BY order_code) A
+WHERE rk = 1
+
+
+
+________________________________________________________________________
+10.Which is the frequently ordered product?
+
+
+
+SELECT A.product_code
+FROM
+(SELECT product_code
+		,COUNT(order_code) AS 'Frequently_order'
+        ,RANK() OVER(ORDER BY COUNT(order_code) DESC) AS rk
+FROM order_detail
+GROUP BY product_code) A
+WHERE rk = 1
+
+
+_________________________________________________________________________
+
+11.Which product is least ordered product?
+
+
+
+
+
+SELECT A.product_code
+FROM
+(SELECT product_code
+		,COUNT(order_code) AS 'Frequently_order'
+        ,RANK() OVER(ORDER BY COUNT(order_code) ASC) AS rk
+FROM order_detail
+GROUP BY product_code) A
+WHERE rk = 1
+
+
+
+
+
+________________________________________________________________________
+12.What product is not at all ordered?
+
+
+
+SELECT product.product_code
+FROM order_detail
+JOIN product
+ON product.product_code = order_detail.product_code
+WHERE product.product_code NOT IN (SELECT product_code
+					FROM order_detail)
+
+
+
+
+
+___________________________________________________________________________
+13.Which is the costliest order? ( Calculate the bill ) 
+
+
+
+WITH temp AS
+(SELECT order_detail.order_code
+        ,SUM(product.price*order_detail.qty_ordered) AS 'Cost_of_order'
+        ,RANK() OVER(ORDER BY SUM(product.price*order_detail.qty_ordered) DESC) AS rk
+FROM product
+JOIN order_detail
+ON order_detail.product_code=product.product_code
+GROUP BY order_detail.order_code)
+SELECT temp.order_code
+FROM temp
+WHERE rk = 1;
+
+
+
+__________________________________________________________________________________
+
+14.In which date costliest order made?
+
+
+
+WITH temp AS
+(SELECT order_detail.order_code
+        ,SUM(product.price*order_detail.qty_ordered) AS 'Costliest_order'
+        ,order_master.order_date
+        ,RANK() OVER(ORDER BY SUM(product.price*order_detail.qty_ordered) DESC) AS rk
+FROM product
+ LEFT JOIN order_detail
+ON order_detail.product_code=product.product_code
+LEFT JOIN order_master
+ON order_master.order_code=order_detail.order_code 
+GROUP BY order_detail.order_code)
+SELECT temp.order_date
+FROM temp 
+WHERE rk = 1;
+
+_________________________________________________________________________________
+15.Which customer made the costliest order?
+
+
+
+SELECT A.customer_code
+FROM(SELECT SUM(product.price*order_detail.qty_ordered) AS 'Costliest_order'
+        ,order_master.customer_code
+        ,RANK() OVER(ORDER BY SUM(product.price*order_detail.qty_ordered) DESC) AS rk
+	FROM product
+	LEFT JOIN order_detail
+	ON  order_detail.product_code = product.product_code
+	LEFT JOIN order_master
+	ON  order_master.order_code = order_detail.order_code 
+	GROUP BY order_detail.order_code) A
+WHERE rk = 1;
+
+
+
+____________________________________________________________________________________
+16.Which customer made the costliest order today?
+
+
+WITH temp AS
+(SELECT order_detail.order_code
+        ,SUM(product.price*order_detail.qty_ordered) AS 'Costliest_order'
+        ,customer.customer_code
+        ,RANK() OVER(ORDER BY SUM(product.price*order_detail.qty_ordered) DESC) AS RK
+FROM product
+ LEFT JOIN order_detail
+ON order_detail.product_code=product.product_code
+LEFT JOIN order_master
+ON order_master.order_code=order_detail.order_code 
+LEFT JOIN customer
+ON customer.customer_code = order_master.customer_code
+GROUP BY order_detail.order_code)
+SELECT temp.customer_code
+FROM temp
+WHERE rk=1;
+
+
+_________________________________________________________________________
+17.Generate the report like
+
+
+
+Customer_name		Cust_addr 	Order_code	Order_date	No_of_products_ordered Total Bill
+
+
+
+SELECT customer.customer_name
+		,order_master.order_code
+        ,order_master.order_date
+        ,SUM(order_detail.qty_ordered) AS 'no_of_products'
+        ,SUM(product.price*order_detail.qty_ordered) AS 'Total_Bill'
+FROM customer
+LEFT JOIN order_master  
+ON order_master.customer_code=customer.customer_code 
+LEFT JOIN order_detail 
+ON order_detail.order_code=order_master.order_code 
+LEFT JOIN product
+ON product.product_code = order_detail.product_code
+GROUP BY order_master.order_code
+
+
+
+______________________________________________________________________________
+18.Write query the customers who are eligible for home delivery (if  tot_bill>=5000)?
+
+
+
+
+SELECT order_detail.order_code
+        ,SUM(product.price*order_detail.qty_ordered) AS 'Total_bill'
+FROM product
+ LEFT JOIN order_detail
+ON order_detail.product_code=product.product_code
+WHERE product.price*order_detail.qty_ordered >= 5000  
+GROUP BY order_detail.order_code
+ORDER BY order_detail.order_code ASC
+
+
+
+
+
+_____________________________________________________________________________________
+19.Which country has maximum branches?
+
+
+
+
+SELECT A.country_code
+		,A.no_of_branches
+FROM
+(SELECT country_code
+	,COUNT(branch_code) AS 'NO_of_branches'
+    ,RANK() OVER(ORDER BY COUNT(branch_code) DESC) AS rk
+FROM branch
+GROUP BY country_code) A
+WHERE rk = 1
+
+
+
+_____________________________________________________________________________________
+20.Which country has minimum branches?
+
+
+SELECT A.country_code
+		,A.no_of_branches
+FROM
+(SELECT country_code
+	,COUNT(branch_code) AS 'NO_of_branches'
+    ,RANK() OVER(ORDER BY COUNT(branch_code) ASC) AS rk
+FROM branch
+GROUP BY country_code) A
+WHERE rk = 1
+
+
+
+
+_______________________________________________________________________________________
+21.Which country has no branches?
+
+
+
+SELECT country_code
+FROM country
+WHERE country_code NOT IN (SELECT country_code
+					FROM branch)
+GROUP BY country_code
+
+
+
+
+________________________________________________________________________________________
+22.Which branch has more sales representatives?
+
+
+
+SELECT A.branch_code
+		,A.no_of_salesrep
+FROM
+(SELECT branch_code
+		,COUNT(salesrep_id) AS 'no_of_salesrep'
+        ,RANK() OVER(ORDER BY COUNT(salesrep_id) DESC) AS rk
+FROM salesrep
+GROUP BY branch_code) A
+WHERE rk = 1
+
+
+____________________________________________________________________________________________
+23.Which branch has less sales representatives?
+
+
+
+SELECT A.branch_code
+	,A.no_of_salesrep
+FROM
+	(SELECT branch_code
+			,COUNT(salesrep_id) AS 'no_of_salesrep'
+			,rank()over(ORDER BY COUNT(salesrep_id) ASC) AS 'rk'
+	FROM salesrep
+	GROUP BY branch_code
+	ORDER BY no_of_salesrep ASC) A
+WHERE rk = 1;
+
+
+
+_____________________________________________________________________________________________
+24.Which branch has no sales representatives?
+
+SELECT salesrep.salesrep_id
+		,branch.branch_code
+FROM salesrep
+JOIN branch
+ON branch.branch_code=salesrep.branch_code
+WHERE salesrep.branch_code NOT IN (SELECT branch
+				FROM branch_code)
+GROUP BY branch.branch_code;
+
+
+
+______________________________________________________________________________________________
+25.Who is the active sales rep?
+
+
+
+WITH temp AS (SELECT salesrep_id
+		,COUNT(salesrep_id) AS 'No_of_orders_placed'
+        ,RANK() OVER(ORDER BY COUNT(salesrep_id) DESC) AS rk
+FROM order_master
+GROUP BY salesrep_id)
+SELECT temp.salesrep_id
+	,temp.No_of_orders_placed
+FROM temp
+WHERE rk =1;
+
+
+____________________________________________________________________________________________
+26.Display all the manager’s names?
+
+
+SELECT salesrep_id
+	,salesrep_name
+FROM salesrep
+GROUP BY mgr;
+
+
+____________________________________________________________________________________________
+27.Display the sales rep that who has joined before their manager?
+
+
+SELECT sl.salesrep_name
+FROM salesrep sl
+INNER JOIN salesrep isl
+ON isl.salesrep_id = sl.mgr
+AND sl.salesrep_doj > isl.salesrep_doj
+
+______________________________________________________________________________________________
+28.Display the sales rep that who earns more than their manager?
+
+
+SELECT sl.salesrep_name
+FROM salesrep sl
+INNER JOIN salesrep isl
+ON isl.salesrep_id = sl.mgr
+WHERE sl.salary>isl.salary
+
+
+_______________________________________________________________________________________________
+29.Display the manager who earns more than average salary of the sales rep
+working under them.
+
+
+
+SELECT sl.salesrep_name
+FROM salesrep sl
+INNER JOIN salesrep isl
+ON isl.salesrep_id = sl.mgr
+WHERE sl.salary>isl.salary;
+
+
+
+_______________________________________________________________________________________________
+30.Display the sales rep details that who started their work immediately?
+
+
+
+
+SELECT a.salesrep_name
+FROM
+(SELECT order_master.salesrep_id
+	,salesrep.salesrep_name
+    ,DATEDIFF(order_master.order_date,salesrep.salesrep_doj) AS 'datdif'
+    ,RANK() OVER(ORDER BY DATEDIFF(order_master.order_date,salesrep.salesrep_doj) ASC) AS rk
+FROM salesrep
+JOIN order_master
+ON order_master.salesrep_id = salesrep.salesrep_id 
+WHERE DATEDIFF(order_master.order_date,salesrep.salesrep_doj) >0
+GROUP BY salesrep_id) A
+WHERE rk=1
+
+_________________________________________________________________________________________________
+31.Display the sales rep that who is in bench for a long time?
+
+SELECT A.salesrep_id
+FROM (SELECT sl.salesrep_id
+		,sl.salesrep_name
+		,DATEDIFF(om.order_date,sl.salesrep_doj)
+		,RANK() OVER(ORDER BY DATEDIFF(om.order_date,sl.salesrep_doj) DESC) AS rk
+	FROM salesrep sl
+	JOIN order_master om
+	ON om.salesrep_id = sl.salesrep_id) A
+WHERE rk =1;
+_________________________________________________________________________________________________
+32.Display the details of in-active sales representatives
+
+
+
+SELECT salesrep_id
+		,salesrep_name
+FROM salesrep
+WHERE salesrep_id NOT IN (SELECT salesrep_id
+				FROM order_master)
+
+
+
+
+
+					REPORTS
+					--------
+________________________________________________________________________________________________
+33.Generate the report like
+Sales_rep_id 	Sales_rep_name 	salary 	Total_orde_value 	Commission(5%)
+
+
+
+SELECT salesrep.salesrep_id
+	,salesrep.salesrep_name
+    ,salesrep.salary
+    ,product.price*order_detail.qty_ordered AS 'Total_orde_value'
+    ,5/100*(product.price*order_detail.qty_ordered) AS 'Comission_5%'
+FROM salesrep
+LEFT JOIN order_master
+ON order_master.salesrep_id = salesrep.salesrep_id
+LEFT JOIN order_detail
+ON order_detail.order_code = order_master.order_code
+LEFT JOIN product
+ON product.product_code = order_detail.product_code
+GROUP BY salesrep.salesrep_id
+
+________________________________________________________________________________________________
+
+34. Generate the report like
+Sales_rep_name 		Order_code 		Bill_value
+
+
+
+SELECT salesrep.salesrep_name
+	,order_detail.order_code
+    ,SUM(product.price*order_detail.qty_ordered) AS 'Bill_value'
+FROM salesrep
+LEFT JOIN order_master
+ON order_master.salesrep_id = salesrep.salesrep_id
+LEFT JOIN order_detail
+ON order_detail.order_code = order_master.order_code
+LEFT JOIN product
+ON product.product_code = order_detail.product_code
+GROUP BY salesrep.salesrep_name;
+
+________________________________________________________________________________________________
+35.Generate the report like
+Sales_rep_name 		Order_code 		No_of_products(in order)
+
+
+SELECT salesrep.salesrep_name
+	,order_detail.order_code
+    ,SUM(order_detail.qty_ordered) AS 'No_of_products'
+FROM salesrep
+LEFT JOIN order_master
+ON order_master.salesrep_id = salesrep.salesrep_id
+LEFT JOIN order_detail
+ON order_detail.order_code = order_master.order_code
+GROUP BY salesrep.salesrep_name;
+
+
+
+_______________________________________________________________________________________________
+36.Generate the report like 
+Sales_rep_name 		Order_code Bill_value 		No_of_products(in order)
+
+SELECT salesrep.salesrep_name
+	,order_detail.order_code
+    ,SUM(product.price*order_detail.qty_ordered) AS 'Bill_value'
+    ,SUM(order_detail.qty_ordered) AS 'No_of_products'
+FROM salesrep
+LEFT JOIN order_master
+ON order_master.salesrep_id = salesrep.salesrep_id
+LEFT JOIN order_detail
+ON order_detail.order_code = order_master.order_code
+LEFT JOIN product
+ON product.product_code = order_detail.product_code
+GROUP BY salesrep.salesrep_name;
+
+
+________________________________________________________________________________________________
+
+37. Who is the senior most sales rep?
+
+
+SELECT A.salesrep_name
+FROM(SELECT salesrep_name,
+		salesrep_doj,
+        RANK() OVER(ORDER BY salesrep_doj ASC) AS rk
+	FROM salesrep
+	ORDER BY salesrep_doj ASC) A
+WHERE rk = 1
+
+
+________________________________________________________________________________________________
+38. Find the no of orders processed by junior most sales rep
+
+
+
+SELECT A.salesrep_id
+		,A.no_of_orders
+FROM(SELECT salesrep.salesrep_id
+        ,COUNT(order_code) AS 'no_of_orders'
+        ,RANK() OVER(ORDER BY salesrep.salesrep_doj DESC ) AS rk
+	FROM salesrep
+	JOIN order_master
+	ON
+	order_master.salesrep_id=salesrep.salesrep_id
+	GROUP BY salesrep_id) A
+WHERE rk = 1;
+
+
+_________________________________________________________________________________________________
+39. Find the no of orders processed by each month in the year 2010?
+
+
+SELECT order_master.order_date
+        ,COUNT(order_detail.order_code) AS 'no_of_orders'
+FROM order_detail
+LEFT JOIN order_master
+ON order_detail.order_code = order_master.order_code 
+WHERE YEAR(order_date) = 2010
+GROUP BY MONTH(order_master.order_date);
+
+
+_________________________________________________________________________________________________
+40. Which region is having in-active sales rep (using joins?)
+
+
+
+SELECT A.In_active_rep
+		,A.branch_name
+FROM(SELECT salesrep.salesrep_name AS 'In_active_rep'
+        ,branch.branch_name
+        ,RANK() OVER(ORDER BY COUNT(order_master.salesrep_id) ASC) AS rk
+	FROM salesrep
+	LEFT JOIN order_master
+	ON order_master.salesrep_id = salesrep.salesrep_id 
+	JOIN branch
+	ON branch.branch_code = salesrep.branch_code
+	GROUP BY order_master.salesrep_id) A
+WHERE rk = 1;
+________________________________________________________________________________________________
+41. Which region is having junior most sales rep?
+
+
+
+SELECT A.salesrep_id
+		,A.branch_name
+FROM (SELECT order_master.salesrep_id
+    ,salesrep.salesrep_doj
+    ,branch.branch_name
+    ,RANK()OVER(ORDER BY salesrep.salesrep_doj DESC) AS rk
+FROM salesrep
+LEFT JOIN order_master
+ON salesrep.salesrep_id = order_master.salesrep_id
+RIGHT JOIN branch
+ON branch.branch_code = salesrep.branch_code
+GROUP BY branch.branch_name) A
+WHERE rk = 1
+
+
+
+
+_________________________________________________________________________________________________
+42. Find the no of orders whose bill is less than 500?
+
+
+SELECT SUM(product.price*order_detail.qty_ordered) AS 'Total_bill'
+		,COUNT(order_detail.order_code) AS 'No_of_orders'
+FROM product
+ LEFT JOIN order_detail
+ON order_detail.product_code =product.product_code
+GROUP BY order_detail.order_code
+HAVING SUM(product.price*order_detail.qty_ordered) <500
+ORDER BY order_detail.order_code ASC;
+
+
+
+_________________________________________________________________________________________________
+43. What is the frequently ordered product by the most active customer?
+
+
+
+SELECT A.product_code
+FROM(SELECT order_master.customer_code
+		,COUNT(order_master.customer_code) AS 'Active_customer'
+		,COUNT(order_detail.product_code) AS 'No_of_orders'
+		,order_detail.product_code
+    ,RANK() OVER(ORDER BY COUNT(order_detail.product_code) DESC) AS rk
+	FROM order_master
+	LEFT JOIN order_detail
+	ON order_detail.order_code = order_master.order_code
+	GROUP BY order_master.customer_code) A
+WHERE rk = 1;
+
+
+_________________________________________________________________________________________________
+44. What are all the products are not ordered by active customer? 
+
+
+
+SELECT order_master.customer_code
+	,COUNT(order_detail.product_code)
+	,product.product_code
+FROM order_master
+LEFT JOIN order_detail
+ON order_detail.order_code=order_master.order_code 
+LEFT JOIN product
+ON product.product_code = order_detail.product_code
+WHERE product.product_code NOT IN (SELECT order_detail.product_code
+						FROM order_detail)
+GROUP BY order_detail.product_code
+
+
+
+
+
+
+
+_________________________________________________________________________________________________
+46. Complete order report
+Cust_name	Cust_address	Order_code	Product_id	Product_name	Order_date
+
+
+
+
+
+SELECT customer.customer_name
+	,order_detail.order_code
+    ,order_detail.product_code
+    ,product.prod_desc
+    ,order_master.order_date
+FROM salesrep
+LEFT JOIN order_master
+ON order_master.salesrep_id = salesrep.salesrep_id
+LEFT JOIN customer
+ON customer.customer_code = order_master.customer_code
+LEFT JOIN order_detail
+ON order_detail.order_code = order_master.order_code
+LEFT JOIN product
+ON product.product_code = order_detail.product_code
+
+
+____________________________________________________________________________________________________
+47. What is the order of execution of clauses?
+
+From
+Where
+Group by
+Having
+Select
+Order by
+
+_____________________________________________________________________________________________________
+48. Department wise who is the maximum salary earner?
+
+
+SELECT branch.branch_name
+		,salesrep.salesrep_name
+		,salesrep.salary
+FROM salesrep
+LEFT JOIN branch
+ON salesrep.branch_code = branch.branch_code
+GROUP BY branch.branch_code;
+______________________________________________________________________________________________________
+
+49. Find the Top-10 active customers based on no. of orders?
+
+
+
+SELECT customer.customer_code
+		,COUNT(order_master.customer_code) AS 'No_of_orders'
+FROM order_master
+LEFT JOIN customer
+ON customer.customer_code = order_master.customer_code 
+GROUP BY customer.customer_code
+ORDER BY no_of_orders DESC;
+
+---------------------------USING RANK
+
+
+SELECT A.customer_code
+		,A.no_of_orders
+FROM
+	(SELECT customer.customer_code
+			,COUNT(order_master.customer_code) AS 'No_of_orders'
+			,RANK() OVER( ORDER BY COUNT(order_master.customer_code) DESC) AS rk
+	FROM order_master
+	LEFT JOIN customer
+	ON customer.customer_code = order_master.customer_code
+	GROUP BY customer.customer_code) A
+	WHERE rk<11 ;
+
+
+
+______________________________________________________________________________________________________
+50. Find the Top-5 orders based on bill value.
+
+
+
+
+SELECT order_master.order_code
+		,SUM(product.price*order_detail.qty_ordered) AS 'Total_bill'
+FROM order_master
+LEFT JOIN order_detail
+ON order_detail.order_code = order_master.order_code
+LEFT JOIN product
+ON product.product_code = order_detail.product_code
+GROUP BY order_master.order_code
+ORDER BY Total_bill DESC
+LIMIT 5;
+
+--------------USING RANK 
+
+
+SELECT A.order_code
+		,A.Total_bill
+FROM
+	(SELECT order_master.order_code
+			,SUM(product.price*order_detail.qty_ordered) AS 'Total_bill'
+			,RANK() OVER(ORDER BY SUM(product.price*order_detail.qty_ordered) DESC) AS 'rk'
+	FROM order_master
+	LEFT JOIN order_detail
+	ON order_detail.order_code = order_master.order_code
+	LEFT JOIN product
+	ON product.product_code = order_detail.product_code
+	GROUP BY order_master.order_code
+	ORDER BY Total_bill DESC) A
+    WHERE rk < 6
+
+
+
+
+
+
+
+______________________________________________________________________________________________________
+51. Display the sales rep that who processed the orders ORD11 and ORD15
+
+
+
+SELECT salesrep_id
+FROM order_master
+WHERE order_code = 'OR11' OR order_code = 'OR15'
+
+
+_____________________________________________________________________________________________________
+52. Generate a report like ‘worker works for manager’
+
+
+SELECT sl.salesrep_name
+		,'Works for' AS ''
+        ,mgr.salesrep_name
+FROM salesrep sl
+JOIN salesrep mgr
+ON mgr.salesrep_id =sl.mgr
+ORDER BY mgr.salesrep_doj
+______________________________________________________________
+Indexes should not be used on tables containing few records. 
+Tables that have frequent, large batch updates or insert operations. 
+Indexes should not be used on columns that contain a high number of NULL values.
+Indexes should not be used on the columns that are frequently manipulated.

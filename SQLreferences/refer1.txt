@@ -1,0 +1,1131 @@
+--------------------------------SALES SQL X -------------------------------
+
+1.)Which category has maximum products 
+
+	SELECT COUNT(PRODUCT_CODE),CATEGORY_CODE
+	FROM PRODUCT
+	GROUP BY CATEGORY_CODE
+	HAVING COUNT(PRODUCT_CODE)>=ALL(SELECT COUNT(PRODUCT_CODE)
+                                FROM PRODUCT 
+                                GROUP BY CATEGORY_CODE)
+
+2.)Which category has minimum products?
+
+	SELECT COUNT(PRODUCT_CODE),CATEGORY_CODE
+	FROM PRODUCT
+	GROUP BY CATEGORY_CODE
+	HAVING COUNT(PRODUCT_CODE)<=ALL(SELECT COUNT(PRODUCT_CODE)
+         	                    FROM PRODUCT 
+                                GROUP BY CATEGORY_CODE)
+
+
+3.)category has no products?
+
+	SELECT category_code
+	FROM CATEGORY 
+	WHERE CATEGORY_CODE NOT IN(SELECT DISTINCT (CATEGORY_CODE) FROM PRODUCT)
+
+
+
+4.)Which is the costliest product?
+
+//FIRST METHOD 
+
+	SELECT product_code,max(price) As max_price
+	FROM product
+	GROUP BY product_code
+	ORDER BY max_price DESC
+	LIMIT 1;
+
+//SECOND METHOD
+	
+	SELECT PRODUCT_CODE, PRICE 
+	FROM(SELECT CATEGORY_CODE, PRODUCT_CODE, PRICE,
+	DENSE_RANK() OVER(PARTITION BY CATEGORY_CODE ORDER BY PRICE ASC) AS RNK FROM PRODUCT) TMP
+	WHERE RNK = 1
+	
+
+5)Which category has costliest product?
+
+//FIRST METHOD
+
+	SELECT category_code,max(price) As max_product
+	FROM PRODUCT
+	GROUP BY product_code
+	ORDER BY max_product DESC
+	LIMIT 1;
+
+//SECOND METHOD
+
+	SELECT CATEGORY_CODE, MAX(PRICE) As price
+	FROM PRODUCT
+	GROUP BY CATEGORY_CODE
+	HAVING MAX(price)>= ALL(SELECT MAX(PRICE)
+	FROM PRODUCT
+	GROUP BY CATEGORY_CODE)
+	
+6.)Which category has lot of products (with respect to quantity on hand)?
+
+//FIRST METHOD
+
+	SELECT category_code,max(qty_on_hand) As max_product
+	FROM product
+	GROUP BY product_code
+	ORDER BY max_product DESC
+	LIMIT 1;
+
+//SECOND METHOD
+
+	SELECT CATEGORY_CODE,PRODUCT_CODE, QTY_ON_HAND
+	FROM(SELECT CATEGORY_CODE, PRODUCT_CODE, QTY_ON_HAND,
+	DENSE_RANK() OVER (PARTITION BY CATEGORY_CODE
+	ORDER BY QTY_ON_HAND DESC) AS RNK
+	FROM PRODUCT) TMP
+	WHERE RNK=1
+
+7)Category wise display the costliest products? 
+
+	SELECT category_code,product_code, price
+	FROM(SELECT category_code, product_code, price,
+	DENSE_RANK() OVER (PARTITION BY category_code
+	ORDER BY price DESC) AS RNK
+	FROM PRODUCT) TMP
+	WHERE RNK=1
+
+8)Category wise display the product whose quantity on hand is minimum?
+
+	SELECT product_code,category_code,qty_on_hand
+	FROM product
+	WHERE qty_on_hand IN (SELECT MIN(qty_on_hand)
+		      FROM product
+		      GROUP BY category_code);
+
+9)Which order has maximum products?
+
+	SELECT ORDER_CODE,COUNT(product_code) AS max_products
+	FROM ORDER_DETAIL
+	GROUP BY order_code
+	HAVING COUNT(PRODUCT_CODE)<=ALL(SELECT COUNT(PRODUCT_CODE)
+         	                    FROM PRODUCT 
+                                GROUP BY CATEGORY_CODE)
+
+ORDER BY max_products DESC LIMIT 1;
+
+10)Which is the frequently ordered product?
+
+	SELECT product_code,count(product_code) AS max_products
+	FROM ORDER_DETAIL
+	GROUP BY product_code
+	HAVING COUNT(ORDER_CODE) >= ALL(SELECT COUNT(ORDER_CODE) FROM ORDER_DETAIL GROUP BY PRODUCT_CODE)
+
+11)Which product is least ordered product?
+
+	SELECT PRODUCT_CODE,COUNT(PRODUCT_CODE) AS min_products
+	FROM ORDER_DETAIL
+	GROUP BY PRODUCT_CODE	
+	HAVING COUNT(PRODUCT_CODE) <= ALL(SELECT COUNT(PRODUCT_CODE)
+         	                    FROM PRODUCT 
+                                GROUP BY CATEGORY_CODE)
+
+
+
+
+12)What product is not at all ordered?
+	
+	SELECT PRODUCT_CODE FROM PRODUCT
+	WHERE PRODUCT_CODE NOT INO (SELECT DISTINCT(PRODUCT_CODE) FROM ORDER_DETAIL)
+
+13)Which is the costliest order? ( Calculate the bill )
+
+	SELECT order_code,SUM(qty_ordered*price) AS bill
+	FROM ORDER_DETAIL od JOIN PRODUCT pr
+	ON od.product_code=pr.product_code
+	GROUP BY order_code
+	HAVING SUM(QTY_ORDERED *PRICE) >= ALL(SELECT SUM(qty_ordered*price) AS bill 
+					FROM ORDER_DETAIL od JOIN PRODUCT pr
+					ON od.product_code=pr.product_code
+					GROUP BY order_code)
+
+
+14)In which date the costliest order made?
+
+	SELECT order_code,order_date
+	FROM order_master
+	WHERE order_code=(SELECT order_code 
+                  FROM order_detail od JOIN product pr
+                  ON od.product_code=pr.product_code
+                  GROUP BY order_code
+                  ORDER BY SUM(qty_ordered*price) DESC LIMIT 1);
+
+//ANOTHER METHOD 
+
+	SELECT OM.ORDER_DATE,OD.ORDER_CODE,SUM(P.PRICE*OD.QTY_ORDERED) AS "height_cost"
+	FROM ORDER_MASTER OM
+	JOIN ORDER_DETAIL OD
+	ON OM.ORDER_CODE = OD.ORDER_CODE
+	JOIN PRODUCT P
+	ON OD.PRODUCT_CODE = P.PRODUCT_CODE
+	GROUP BY OM.ORDER_DATE,OD.ORDER_CODE
+	HAVING SUM(P.PRICE*OD.QTY_ORDERED) >= ALL(SELECT SUM(P.PRICE*OD.QTY_ORDERED) AS "height_cost"
+	FROM ORDER_MASTER OM
+	JOIN ORDER_DETAIL OD
+	ON OM.ORDER_CODE = OD.ORDER_CODE
+	JOIN PRODUCT P
+	ON OD.PRODUCT_CODE = P.PRODUCT_CODE
+	GROUP BY OM.ORDER_DATE,OD.ORDER_CODE);
+
+15)Which customer made the costliest order?
+
+SELECT customer_code,customer_name
+FROM customer
+WHERE customer_code=(SELECT customer_code
+                     FROM order_master
+                     WHERE order_code=(SELECT order_code 
+                                       FROM order_detail od JOIN product pr
+                                       ON od.product_code=pr.product_code
+                                       GROUP BY order_code
+                                       ORDER BY SUM(qty_ordered*price) DESC LIMIT 1));
+
+//ANOTHER METHOD
+
+	SELECT c.customer_code, c.customer_name, SUM(p.price * od.qty_ordered) AS "total bill"
+	FROM customer c
+	JOIN order_master om
+	ON c.customer_code = om.customer_code
+	JOIN order_detail od
+	ON om.order_code = od.order_code
+	JOIN product p
+	ON od.product_code = p.product_code
+	GROUP BY c.customer_code
+	HAVING SUM(p.price * od.qty_ordered)>= ALL(SELECT SUM(p.price * od.qty_ordered) AS "total bill"
+	FROM customer c
+	JOIN order_master om
+	ON c.customer_code = om.customer_code
+	JOIN order_detail od
+	ON om.order_code = od.order_code
+	JOIN product p
+	ON od.product_code = p.product_code
+	GROUP BY c.customer_code);
+
+16)Which customer made the costliest order today?
+
+SELECT customer_code,customer_name
+FROM CUSTOMER
+WHERE customer_code=(SELECT customer_code
+                     FROM ORDER_MASTER
+                     WHERE order_date=(SELECT order_date
+				       FROM ORDER_MASTER
+				       WHERE order_date='2010_08_02'));
+
+17)Generate the report like
+
+	SELECT C.CUSTOMER_NAME, OM.ORDER_CODE, OM.ORDER_DATE, COUNT(DISTINCT OD.PRODUCT_CODE) AS NOOFPRODUCTS,
+	SUM(OD.QTY_ORDERED * P.PRICE) AS "Total bill"
+	FROM CUSTOMER C
+	JOIN ORDER_MASTER OM
+	ON C.CUSTOMER_CODE = OM.CUSTOMER_CODE
+	JOIN ORDER_DETAIL OD
+	ON OM.ORDER_CODE = OD.ORDER_CODE
+	JOIN PRODUCT P
+	ON OD.PRODUCT_CODE = P.PRODUCT_CODE
+	GROUP BY C.CUSTOMER_NAME, OM.ORDER_CODE
+	ORDER BY "Total bill" DESC
+
+
+18)Write query the customers who are eligible for home delivery (if tot_bill>=5000)?
+
+	SELECT cr.customer_code,od.order_code, SUM(qty_ordered*price) AS BillValue
+	FROM customer cr JOIN order_master om
+	ON om.customer_code=cr.customer_code
+        JOIN order_detail od
+        ON od.order_code=om.order_code
+        JOIN product pr
+        ON od.product_code=pr.product_code
+        HAVING SUM(qty_ordered*price)>=5000
+	CASE
+		WHEN SUM(qty_ordered*price)>=5000 THEN 'Yes'
+		WHEN SUM(qty_ordered*price)<5000 THEN 'No'
+		END DESCRIPTION	
+	GROUP BY cr.customer_code,cr.customer_name,od.order_code
+
+19)Which country has maximum branches?
+
+	SELECT COUNTRY_NAME FROM COUNTRY 
+	WHERE COUNTRY_CODE = ANY(SELECT COUNTRY_CODE FROM BRANCH GROUP BY COUNTRY_CODE 
+                            HAVING COUNT(COUNTRY_CODE) >= ALL(SELECT COUNTRY_CODE FROM BRANCH GROUP BY COUNTRY_CODE))
+                            
+	GROUP BY COUNTRY_NAME
+                            
+
+
+20)Which country has minimum branches?  
+
+	SELECT COUNTRY_NAME FROM COUNTRY 
+	WHERE COUNTRY_CODE = ANY(SELECT COUNTRY_CODE FROM BRANCH GROUP BY COUNTRY_CODE 
+                            HAVING COUNT(COUNTRY_CODE) <= ALL(SELECT COUNTRY_CODE FROM BRANCH GROUP BY COUNTRY_CODE))
+                            
+	GROUP BY COUNTRY_NAME
+
+21)Which country has no branches?
+
+	SELECT COUNTRY_NAME FROM BRANCH
+	WHERE COUNTRY_CODE = (SELECT COUNTRY_CODE FROM BRANCH NOT IN SELECT DISTINCT (COUNTRY_CODE) FROM COUNTRY)
+
+22)Which branch has more sales representatives?
+
+	SELECT BRANCH_CODE,COUNT(BRANCH_CODE) AS MAX_SALESREP
+	FROM SALESREP
+	GROUP BY BRANCH_CODE 
+	HAVING COUNT(SALESREP_ID) >= ALL(SELECT COUNT(SALESREP_ID) FROM SALESREP GROUP BY BRANCH_CODE)            
+
+23)Which branch has less sales representatives?
+
+	SELECT BRANCH_CODE,COUNT(branch_code) AS MIN_SALESREP
+	FROM SALESREP
+	GROUP BY BRANCH_CODE  
+	HAVING COUNT(SALESREP_ID) <= ALL(SELECT COUNT(SALESREP_ID) FROM SALESREP GROUP BY BRANCH_CODE)
+
+24)Which branch has no sales representatives?
+
+	SELECT BRANCH_NAME FROM BRANCH 
+	WHERE BRANCH_CODE = (SELECT BRANCH_CODE FROM BRANCH EXCEPT 
+                    SELECT DISTINCT (BRANCH_CODE) FROM SALESREP)
+
+25.)Who is the active sales rep?
+
+	SELECT SALESREP_ID, COUNT(ORDER_DATE) as 'orders'
+	FROM ORDER_MASTER
+	GROUP BY SALESREP_ID
+	WHERE ORDER_DATE = (SELECT MAX(ORDER_DATE) FROM ORDER_MASTER)
+
+
+	//order by orders desc   
+	limit 1
+
+26.)Display all the manager’s names?
+	
+	SELECT salesrep_id,salesrep_name
+	FROM SALESREP
+	WHERE salesrep_id  IN (SELECT mgr
+	               FROM SALESREP
+	               GROUP BY mgr);
+
+27.)Display the sales rep that who has joined before their manager?
+	
+	SELECT EMP.SALESREP_NAME,EMP.SALESREP_DOJ
+	FROM SALESREP EMP
+	JOIN SALESREP MGER
+	ON EMP.MGR = MGER.MGR
+	WHERE EMP.SALESREP_DOJ < MGER.SALESREP_DOJ
+
+28.)Display the sales rep that who earns more than their manager?	
+	
+	SELECT EMP.SALESREP_ID, EMP.SALESREP_NAME
+	FROM SALESREP EMP JOIN SALESREP MGER 
+	ON MGER.SALESREP_ID = EMP.MGR 
+	WHERE EMP.SALARY > MGER.SALARY
+
+29.)Display the manager who earns more than average salary of the sales rep working under them.
+
+	SELECT SALESREP_ID,SALESREP_NAME
+	FROM SALESREP EMP 
+	WHERE SALARY > (SELECT AVG(SALARY) FROM SALESREP)	
+	
+
+30.)Display the sales rep details that who started their work immediately?
+
+	SELECT SR.SALESREP_ID, SR.SALESREP_NAME
+	FROM SALESREP SR JOIN ORDER_MASTER OM 
+	ON OM.SALESREP_ID = SR.SALESREP_ID
+	WHERE SALESREP_DOJ = ORDER_DATE 
+	
+31.)Display the sales rep that who is in bench for a long time?
+	
+	SELECT SR.SALESREP_NAME,OM.ORDER_DATE
+	FROM SALESREP SR
+	JOIN ORDER_MASTER OM
+	ON OM.SALESREP_ID = SR.SALESREP_ID
+	WHERE SR.SALESREP_ID NOT IN (SELECT SALESREP_ID FROM ORDER_MASTER)
+		
+
+32.)Display the details of in-active sales representatives.
+	
+	SELECT SR.SALESREP_NAME, SR.SALESREP_ID
+	FROM SALESREP SR JOIN ORDER_MASTER OM 
+	ON OM.SALESREP_ID = SR.SALESREP_ID
+	WHERE OM.ORDER_CODE NOT IN(SELECT ORDER_CODE FROM ORDER_MASTER)
+	
+
+//	ANOTHER METHOD
+
+	SELECT SR.SALESREP_NAME, SR.SALESREP_ID
+	FROM SALESREP SR JOIN ORDER_MASTER OM 
+	ON OM.SALESREP_ID = SR.SALESREP_ID
+	WHERE SR.SALESREP_ID NOT IN(SELECT DISTINCT SALESREP_ID FROM ORDER_MASTER)
+	
+33.)Generate the report like
+
+	
+	SELECT sr.salesrep_id,sr.salesrep_name,sr.salary,
+       SUM(qty_ordered*price) AS total_order_value,
+       SUM(0.05*price) AS commision
+	FROM SALESREP sr JOIN ORDER_MASTER om
+                 ON om.salesrep_id=sr.salesrep_id
+                                  JOIN ORDER_DETAIL od
+                                  ON od.order_code=om.order_code
+                                                  JOIN PRODUCT pr
+                                                  ON od.product_code=pr.product_code
+                                                  GROUP BY sr.salesrep_id,sr.salesrep_name,sr.salary;
+34.)Generate the report like
+
+	SELECT sr.salesrep_name,od.order_code,
+       		SUM(qty_ordered*price) AS bill_value
+	FROM SALESREP sr JOIN ORDER_MASTER om
+        ON om.salesrep_id=sr.salesrep_id
+                                  JOIN ORDER_DETAIL od
+                                  ON od.order_code=om.order_code
+                                                  JOIN PRODUCT pr
+                                                  ON od.product_code=pr.product_code
+                                                  GROUP BY sr.salesrep_name,od.order_code;
+35.)Generate the report like
+
+	SELECT sr.salesrep_name,od.order_code,
+       		COUNT(od.product_code) AS number_of_products
+	SALESREP sr 
+	JOIN ORDER_MASTER om
+	ON om.salesrep_id=sr.salesrep_id
+                 JOIN ORDER_DETAIL od
+                 ON od.order_code=om.order_code
+                                 JOIN PRODUCT pr
+                                 ON od.product_code=pr.product_code
+                                                   GROUP BY sr.salesrep_name,od.order_code
+                                                   ORDER BY number_of_products;
+
+36.)Generate the report like
+
+	SELECT sr.salesrep_name,od.order_code,
+       		SUM(qty_ordered*price) AS bill_value,
+		COUNT(od.product_code) AS number_of_products
+	FROM SALESREP sr 
+	JOIN ORDER_MASTER om
+	ON om.salesrep_id=sr.salesrep_id
+                 JOIN ORDER_DETAIL od
+                 ON od.order_code=om.order_code
+                                 JOIN PRODUCT pr
+                                 ON od.product_code=pr.product_code
+                                 GROUP BY sr.salesrep_name,od.order_code
+                                 ORDER BY number_of_products;
+
+37)Who is the senior most sales rep?
+
+	SELECT salesrep_id,salesrep_name
+	FROM SALESREP
+	WHERE salesrep_doj = (SELECT min(salesrep_doj)
+		      FROM SALESREP);
+
+38. Find the no of orders processed by junior most sales rep
+
+	SELECT sr.salesrep_id,
+      			min(salesrep_doj) AS jr_sales_executive,count(om.salesrep_id)
+	FROM SALESREP sr 
+	JOIN ORDER_MASTER om
+	ON om.salesrep_id=sr.salesrep_id
+	GROUP BY sr.salesrep_id
+	WHERE MIN(SALESREP_DOJ) >= (SELECT sr.salesrep_id, min(salesrep_doj) AS jr_sales_executive,count(om.salesrep_id)
+					FROM SALESREP )
+
+
+	//ANOTHER WAY TO SOLVE..
+	
+	SELECT sr.salesrep_id,
+      			min(salesrep_doj) AS jr_sales_executive,count(om.salesrep_id)
+	FROM SALESREP sr 
+	JOIN ORDER_MASTER om
+	ON om.salesrep_id=sr.salesrep_id
+	GROUP BY sr.salesrep_id
+	ORDER BY MIN(salesrep_doj) DESC LIMIT 1
+
+39. Find the no of orders processed by each month in the year 2010?
+	
+	SELECT count(order_code),month(order_date)
+	FROM ORDER_MASTER
+	WHERE year(order_date)=2010
+	GROUP BY month(order_date)
+	ORDER BY month(order_date) ASC;
+
+	
+40. Which region is having in-active sales rep (using joins?)
+	
+	SELECT CT.region,CT.country_name,SR.salesrep_id,SR.salesrep_name
+	FROM COUNTRY CT JOIN BRANCH BR
+	ON CT.country_code=BR.country_code
+                  JOIN SALESREP SR
+                  ON SR.branch_code=BR.branch_code
+                  JOIN ORDER_MASTER OM
+                  ON OM.SALESREP_ID = SR.SALESREP_ID
+                  WHERE OM.ORDER_CODE=(SELECT MIN(order_code)
+					  FROM ORDER_MASTER);
+	
+	
+
+41. Which region is having junior most sales rep?
+
+	SELECT ct.region,ct.country_name,sr.salesrep_id,sr.salesrep_name
+	FROM COUNTRY ct JOIN BRANCH br
+	ON ct.country_code=br.country_code
+                  JOIN SALESREP sr
+                  ON sr.branch_code=br.branch_code
+                  WHERE sr.salesrep_doj=(SELECT max(salesrep_doj)
+					  FROM SALESREP);
+
+42. Find the no of orders whose bill is less than 500?
+	
+	SELECT OD.ORDER_CODE, COUNT(OD.ORDER_CODE) AS 'NO_OF_ORDERS' , SUM(QTY_ORDERED *PRICE) AS BILL_VALUE
+	FROM ORDER_DETAIL OD JOIN PRODUCT PT 
+	ON PT.PRODUCT_CODE = OD.PRODUCT_CODE
+	WHERE SUM(QTY_ORDERED * PRICE) > 500
+
+
+43. What is the frequently ordered product by the most active customer?
+
+	SELECT PRODUCT_CODE FROM (SELECT product_code,COUNT(product_code),
+	DENSE_RANK() OVER (ORDER BY COUNT(PRODUCT_CODE) DESC) RNK
+	FROM ORDER_DETAIL OD
+	JOIN ORDER_MASTER OM
+	ON OM.order_code=OD.order_code
+	WHERE customer_code=(SELECT customer_code FROM ORDER_MASTER
+			     GROUP BY CUSTOMER_CODE
+	HAVING COUNT(order_code)>=ALL(SELECT COUNT(order_code) FROM ORDER_MASTER
+				     GROUP BY customer_code))
+	GROUP BY Product_code
+	ORDER BY COUNT(Product_coDe) DESC) TMP
+	WHERE RNK <= 1
+	
+
+44. What are all the products are not ordered by active customer?
+	
+	SELECT P.PRODUCT_CODE FROM PRODUCT P
+	LEFT JOIN PRODUCT_DETAIL OD
+	ON OD.PRODUCT_CODE = P.PRODUCT_CODE
+	WHERE OD.PRODUCT_CODE IS NONE
+	
+	
+45. Display the orders which can’t be processed immediately?
+(Hint: where order quantity>qoh)
+
+	SELECT od.order_code
+	from order_detail od
+	JOIN product p
+	ON od.product_code = p.product_code
+	GROUP BY od.order_code, od.qty_ordered>p.qty_on_hand
+	
+	
+
+46. Complete order report
+
+	SELECT cr.customer_code,cr.customer_name,od.order_code,pr.product_code,pr.prod_desc,order_date
+	FROM CUSTOMER cr 
+	JOIN ORDER_MASTER om
+	ON om.customer_code=cr.customer_code
+                   JOIN ORDER_DETAIL od
+                   ON od.order_code=om.order_code
+                                   JOIN PRODUCT pr
+                                   ON od.product_code=pr.product_code;
+
+47. What is the order of execution of clauses????
+
+	1st------->FROM
+	2st------->WHERE
+	3st------->GROUP BY
+	4st------->HAVING
+	5st------->SELECT
+	6st------->ORDER BY
+
+
+48. Department wise who is the maximum salary earner?
+	
+	SELECT SALESREP_NAME,SALESREP_ID,SALARY
+	FROM SALESREP
+	WHERE SALARY IN
+  		(SELECT MAX(SALARY) AS salary
+   		FROM SALESREP
+   		GROUP BY SALESREP_ID)
+
+49. Find the Top-10 active customers based on no. of orders?
+
+	
+	SELECT CR.CUSTOMER_CODE, CR.CUSTOMER_NAME, DENCE RANK() OVER(ORDER BY COUNT(ORDER_CODE)) AS 'NO_OF_ORDERS'
+	FROM CUSTOMER CR JOIN ORDER_MASTER OM
+	ON OM.CUSTOMER_CODE = CR.CUSTOMER_CODE
+	GROUP BY CR.CUSTOMER_CODE
+	ORDER BY NO_OF_ORDERS DESC
+	LIMIT 10	
+	
+	
+
+50. Find the Top-5 orders based on bill value.
+
+	SELECT od.order_code,
+        SUM(qty_ordered*price) AS bill
+	FROM ORDER_DETAIL od JOIN PRODUCT pr
+	ON pr.product_code=od.product_code
+        GROUP BY od.order_code
+        ORDER BY bill 
+        LIMIT 5 ;
+
+51. Display the sales rep that who processed the orders ORD11 and ORD15.
+
+	SELECT DISTINCT(OM1.SALESREP_ID) FROM ORDER_MASTER OM1 
+	JOIN ORDER_MASTER OM2 
+	ON OM2.SALESREP_ID = OM1.SALESREP_ID 
+	WHERE (OM1.ORDER_CODE = OR11 AND OM2.ORDER_CODE = OR15)
+
+
+52. Generate a report like ‘worker works for manager’
+
+	SELECT MG.SALESREP_NAME || 'WORKS_FOR' || SP.SALESREP_NAME
+	FROM SALESREP SP 
+	JOIN SALESREP MG 
+	ON MG.MGR = SP.SALESREP_ID
+
+
+___________________________________________________________________________________________________
+
+
+	---------------------- TIME SHEET SQL X--------------------------
+
+1.Which PROJECT has maximum number of EMPLOYEES?
+	
+
+
+	
+	SELECT PT.PROJECT_NAME, COUNT(AR.PROJECT_ID)
+	FROM ALLOCATION AR JOIN T_PROJECT PT 
+	ON PT.PROJECT_ID = AR.PROJECT_ID
+	GROUP BY PT.PROJECT_ID 
+	HAVING COUNT(PT.PROJECT_ID) >= ALL(SELECT COUNT(PT.PROJECT_ID)
+                                		FROM ALLOCATION 
+                                		GROUP BY PT.PROJECT_ID)
+
+
+//another method
+	
+	with temp as (SELECT COUNT(EMP_ID) 'EMPLOYESS_NO' , PROJECT_ID ,DENSE_RANK()OVER( ORDER BY COUNT(EMP_ID)DESC) AS "rankno"
+	FROM ALLOCATION
+	GROUP BY PROJECT_ID
+	ORDER BY EMPLOYESS_NO DESC )
+	select EMPLOYESS_NO,PROJECT_ID from temp where rankno = 1
+	
+
+2.Which EMPLOYEE has not yet been allocated to any PROJECT?
+
+	
+	SELECT EM.EMP_ID 
+	FROM EMPLOYEE EM JOIN ALLOCATION AL
+	ON AL.EMP_ID = EM.EMP_ID
+	WHERE EM.EMP_ID NOT IN(SELECT EMP_ID FROM ALLOCATION)
+	
+
+3.Which role played by the employee 'E03' frequently?
+	
+	SELECT al.emp_id,rl.role_id,rl.role_title
+	FROM ALLOCATION al JOIN ROLE rl
+	ON rl.role_id = al.role_id
+	WHERE emp_id='e03'
+
+4.Which is the costliest Project?
+
+	SELECT PROJECT_ID,SUM(AMOUNT_PER_DAY)
+	FROM ALLOCATION
+	GROUP BY PROJECT_ID
+	HAVING SUM(AMOUNT_PER_DAY)>= ALL(SELECT SUM(AMOUNT_PER_DAY)FROM ALLOCATION GROUP BY (PROJECT_ID))
+	
+5.How many employees were there in costliest Project?
+
+	WITH TEMP AS (SELECT PROJECT_ID,SUM((TO_DATE-FROM_DATE)*AMOUNT_PER_DAY) AS "TOTAL_AMOUNT",
+	COUNT(EMP_ID) as "NO_OF_EMPLOYEES" ,DENSE_RANK()OVER( ORDER BY SUM((TO_DATE-FROM_DATE)*AMOUNT_PER_DAY) DESC) AS "rankno"
+	FROM ALLOCATION
+	GROUP BY PROJECT_ID
+	ORDER BY "TOTAL_AMOUNT" DESC )
+	SELECT PROJECT_ID,NO_OF_EMPLOYEES FROM TEMP WHERE RANKNO = 1
+
+6.Which is the cheapest Project in the year 2012?
+
+	SELECT PROJECT_ID,FROM_DATE,TO_DATE,DATEDIFF(TO_DATE,FROM_DATE) AS TOTAL_DAYS, AMOUNT_PER_DAY,DATEDIFF(TO_DATE,FROM_DATE) * AMOUNT_PER_DAY AS 'TOTAL_AMOUNT' FROM allocation
+	WHERE YEAR(FROM_DATE) IN ('2012') AND YEAR(TO_DATE) IN ('2012')
+	GROUP BY PROJECT_ID
+	ORDER BY TOTAL_AMOUNT ASC
+	LIMIT 1
+
+
+7.What is the salary of employee, who played maximum roles in Project 'P07'?
+	
+	SELECT EMP_ID,EMP_NAME,SALARY
+	FROM EMPLOYEE
+	WHERE EMP_ID IN (SELECT EMP_ID FROM ALLOCATION WHERE ROLE_ID=(SELECT ROLE_ID FROM ALLOCATION WHERE PROJECT_ID ='P02' GROUP BY ROLE_ID
+	ORDER BY COUNT(ROLE_ID)DESC  LIMIT 1) )
+
+8.How many projects are handled by senior most employee?
+
+	SELECT E.EMP_ID,E.EMP_NAME,COUNT(DISTINCT A.PROJECT_ID) AS "NO OF PROJECTS"
+	FROM EMPLOYEE E
+	JOIN ALLOCATION A
+	ON A.EMP_ID = E.EMP_ID
+	WHERE HIRE_DATE = (SELECT MIN(HIRE_DATE) FROM EMPLOYEE)
+	GROUP BY E.EMP_ID
+
+9.What is the total amount spent for unassigned employees?
+	
+	SELECT EMP_ID,SUM(SALARY) AS " TOTAL AMOUNT"
+	FROM EMPLOYEE
+	WHERE EMP_ID NOT IN(SELECT DISTINCT EMP_ID FROM ALLOCATION)
+	GROUP BY ROLLUP (EMP_ID)
+	ORDER BY EMP_ID
+
+10.How many projects are completed till date (Assume to_date is completion date in Allocation table)?
+	
+	SELECT DISTINCT (al.project_id) , tp.project_name
+	FROM ALLOCATION al JOIN T_PROJECT tp
+	ON tp.project_id=al.project_id
+	WHERE to_date>from_date
+	
+11.How many employees have worked for less than 10 Projects?
+	
+	SELECT EMP_ID,COUNT(PROJECT_ID)
+	FROM ALLOCATION
+	GROUP BY EMP_ID
+	HAVING COUNT(PROJECT_ID)<10
+
+12.How many employees are working with role 'R02' in project 'P04'?
+	
+	SELECT (EMP_ID)
+	FROM ALLOCATION
+	WHERE ROLE_ID='R02' AND PROJECT_ID='P04'
+
+13.Which client has given maximum number of Projects?
+
+	SELECT CLIENT_NAME, COUNT(PROJECT_ID) AS Count_OF_PROJECTS
+	FROM T_PROJECT
+	GROUP BY CLIENT_NAME
+	HAVING COUNT(PROJECT_ID) >= ALL(SELECT COUNT(PROJECT_ID) FROM T_PROJECT
+	GROUP BY CLIENT_NAME)
+
+14.Which employee has not been allocated to any project in the year 2010?
+	
+	SELECT E.EMP_ID,E.EMP_NAME
+	FROM EMPLOYEE E JOIN ALLOCATION A
+	ON A.EMP_ID = E.EMP_ID
+	WHERE E.EMP_ID NOT IN (SELECT EMP_ID from ALLOCATION WHERE YEAR(FROM_DATE) = 2010);
+
+15.Find the total number of days worked by the employee 'E04' in project 'P02'?
+	
+	SELECT EMP_ID,PROJECT_ID,TO_DATE-FROM_DATE as "NO OF DAYS"
+	FROM ALLOCATION
+	WHERE EMP_ID='E04' AND PROJECT_ID='P02'
+
+16.Which Project has been completed exactly on deadline date?
+	
+	SELECT T.PROJECT_ID
+	FROM T_PROJECT T
+	JOIN ALLOCATION A
+	ON A.PROJECT_ID = T.PROJECT_ID
+	WHERE TO_DATE = DEADLINE
+
+17.How many employees were working for the Project, which has crossed the deadline?
+	
+	SELECT T.PROJECT_ID,COUNT(A.EMP_ID) AS "NO OF EMPLOYEES"
+	FROM T_PROJECT T
+	JOIN ALLOCATION A
+	ON A.PROJECT_ID = T.PROJECT_ID
+	WHERE TO_DATE < DEADLINE
+	GROUP BY T.PROJECT_ID
+
+
+
+18.Which Project has been completed so earlier?
+	
+	SELECT DISTINCT (tp.project_id), tp.project_name
+	FROM t_project tp
+	JOIN allocation a
+	ON tp.project_id = a.project_id
+	WHERE a.to_date < tp.deadline
+	
+
+19.Which Project has taken maximum duration?
+
+	SELECT PROJECT_ID,MAX(TO_DATE-FROM_DATE)
+	FROM ALLOCATION
+	GROUP BY PROJECT_ID
+	HAVING MAX(TO_DATE-FROM_DATE)>=(SELECT MAX(TO_DATE-FROM_DATE)
+					FROM ALLOCATION GROUP BY PROJECT_ID)
+
+20. REPORT FOR EMP_ID,TOTAL NUMBER OF DAYS IN BENCH
+
+	SELECT E.EMP_ID,E.EMP_NAME ,DATEDIFF(FROM_DATE,hire_date) AS 'NO_OF_DAYS_IN_BENCH'
+	FROM EMPLOYEE E JOIN ALLOCATION A
+	ON A.EMP_ID = E.EMP_ID
+	where E.EMP_ID NOT In (select EMP_ID from ALLOCATION );
+
+21.Generete Report (project_Name,No_of_employees)
+
+	SELECT P.PROJECT_NAME,COUNT(A.EMP_ID) AS 'No_of_employees'
+	FROM ALLOCATION A JOIN T_PROJECT P
+	ON A.PROJECT_ID=P.PROJECT_ID
+	GROUP BY PROJECT_NAME
+
+22.Prepare a report in following format(Rolename,Number of employees)
+
+	SELECT r.ROLE_TITLE,COUNT(a.EMP_ID) AS 'No_of_employees'
+	FROM ROLE r join ALLOCATION a
+	ON a.ROLE_ID=r.ROLE_ID
+	GROUP BY ROLE_TITLE
+
+23.Prepare a report in following format(Emp Name,Number of Projects)
+
+	SELECT EMP_NAME,COUNT(a.PROJECT_ID) AS 'NUM_OF_PROJECTS'
+	FROM EMPLOYEE e JOIN ALLOCATION a
+	ON a.EMP_ID = e.EMP_ID
+	GROUP BY EMP_NAME
+
+24.Prepare a report in following format(Emp Name,Number of Roles)
+
+	SELECT EMP_NAME,COUNT(a.ROLE_ID) AS 'NUM_OF_ROLES'
+	FROM EMPLOYEE e join ALLOCATION a
+	ON a.EMP_ID = e.EMP_ID
+	GROUP BY EMP_NAME
+
+25.Prepare a report in this format(roll name, name of employees)
+
+	SELECT R.ROLE_TITLE, EMP.EMP_NAME 
+	FROM ROLE R JOIN ALLOCATION A
+	ON A.ROLE_ID = R.ROLE_ID 
+	JOIN EMPLOYEE EMP 
+	ON EMP.EMP_ID = A.EMP_ID 
+	
+26.Prepare a report in this format (Role Name,Number of Projects)
+
+	SELECT r.ROLE_TITLE,COUNT(PROJECT_ID) AS 'NUM_OF_PROJECTS'
+	FROM ROLE r JOIN ALLOCATION a
+	ON a.ROLE_ID=r.ROLE_ID
+	GROUP BY r.ROLE_TITLE
+
+27.Prepare a report in this format(Emp Name,Role Name,Number of Projects)
+
+	SELECT e.EMP_NAME,r.ROLE_TITLE,COUNT(a.PROJECT_ID) AS 'NUM_OF_PROJECTS'
+	FROM ALLOCATION a JOIN ROLE r
+	ON a.ROLE_ID = r.ROLE_ID JOIN EMPLOYEE e
+	ON a.EMP_ID=e.EMP_ID
+	GROUP BY e.EMP_NAME,r.ROLE_TITLE
+
+28.Prepare a report in this format(Project Name,Role Name,Number of Employees)
+
+	SELECT p.PROJECT_NAME,r.ROLE_TITLE,COUNT(a.EMP_ID) AS 'NUM_OF_EMPLOYEES'
+	FROM ALLOCATION a join T_PROJECT p
+	ON a.PROJECT_ID = p.PROJECT_ID join ROLE r
+	ON a.ROLE_ID=r.ROLE_ID
+	GROUP BY p.PROJECT_NAME,r.ROLE_TITLE
+
+29.Prepare a report in this format(Role Name ,Emp Name, Number of Projects)
+
+	SELECT r.ROLE_TITLE,e.EMP_NAME,COUNT(a.PROJECT_ID) AS 'NUM_OF_PROJECTS'
+	FROM ALLOCATION a JOIN ROLE r
+	ON a.ROLE_ID = r.ROLE_ID JOIN EMPLOYEE e
+	ON a.EMP_ID=e.EMP_ID
+	GROUP BY r.ROLE_TITLE,e.EMP_NAME
+
+30.prepare a report in this format(Dept Id,Number of Employees)
+
+	select DEPT_ID,count(EMP_ID) AS 'NUM_OF_EMPLOYESS'
+	from EMPLOYEE
+	group by DEPT_ID
+
+31.Prepare a report in this format(Mgr_id,Number of Employees)
+
+	select MGR_ID,count(EMP_ID) AS 'NUM_OF_EMPLOYEES'
+	from EMPLOYEE
+	group by MGR_ID
+
+32.Prepare a report in this format(Emp Name ,Role Name, Project Name)
+
+	select EMP_NAME,ROLE_TITLE,PROJECT_NAME
+	from EMPLOYEE,ROLE,T_PROJECT
+	group by EMP_NAME,ROLE_TITLE,PROJECT_NAME
+
+33.Prepare a report in this format(Project id,Emp id,Total Amount collected)
+
+	
+	select PROJECT_ID,EMP_ID,sum(AMOUNT_PER_DAY) AS 'AMOUNT COLLECTED'
+	from ALLOCATION
+	group by PROJECT_ID,EMP_ID
+	order by sum(AMOUNT_PER_DAY) desc
+
+34.Prepare a report in this format(Emp id,Role id,Total Amount collected)
+
+	select EMP_ID,ROLE_ID,sum(AMOUNT_PER_DAY) AS 'TOTAL_AMOUNT_COLLECTED'
+	from ALLOCATION
+	group by EMP_ID, ROLE_ID
+
+35.Prepare a report in this format(Emp id,Role id,Project id,Total Amount collected)
+
+	select EMP_ID,ROLE_ID,PROJECT_ID,sum(AMOUNT_PER_DAY) AS 'TOTAL_AMOUNT_COLLECTED'
+	from ALLOCATION
+	group by EMP_ID,ROLE_ID,PROJECT_ID
+	order by sum(AMOUNT_PER_DAY) desc	
+
+36.Prepare a report in this format? If Manager id is NULL for an employee, then the comment must be “No Manager” ?
+
+
+	SELECT emp_id,mgr_id,
+	CASE
+		WHEN mgr_id='null' THEN 'Has Manager' 
+		ELSE 'No Manager'
+		End AS Comments
+	FROM EMPLOYEE
+  
+37. Prepare a report in this format  
+	Ram Works for Ashok         
+	Adam works for Akbar
+	Where Ram is employee name and Ashok is his corresponding manager
+
+	SELECT CONCAT(EMP.EMP_NAME, ' WORKS FOR ' , MGR.EMP_NAME ) AS "EMP MANAGER"
+	FROM EMPLOYEE EMP
+	JOIN EMPLOYEE MGR
+	ON(EMP.MGR_ID = MGR.EMP_ID)
+
+	
+	SELECT EMP.EMP_NAME || 'WORKS_FOR' || MGR.EMP_NAME
+	FROM EMPLOYEE EMP 
+	JOIN EMPLOYEE MGR
+	ON EMP.MGR_ID = MGR.EMP_ID
+
+	
+
+38.Which employees earns more than his/her manager?
+
+	SELECT emp_name,salary
+	FROM EMPLOYEE
+	GROUP BY emp_name,salary
+	HAVING salary>=ALl(SELECT salary
+				  from EMPLOYEE
+				  GROUP BY mgr_id,salary)
+
+39.Which manager joined after his/her sub ordinates?
+	
+	SELECT mgr_id,hire_date
+	FROM EMPLOYEE
+	GROUP BY mgr_id,hire_date
+	HAVING hire_date>=ALL(SELECT hire_date
+				  from EMPLOYEE)
+
+40.Using Correlated Subquery and WITH clause Find all employees who earns more than the average salary of his/her department?
+	
+	WITH TMP AS(SELECT DEPT_ID,AVG(SALARY)AS AVERAGE_DEPARMENT_OF_SALARY
+	FROM EMPLOYEE
+	GROUP BY DEPT_ID) SELECT EMP_ID,SALARY,AVERAGE_DEPARMENT_OF_SALARY
+	FROM EMPLOYEE
+	INNER JOIN TMP
+	ON EMPLOYEE.DEPT_ID = TMP.DEPT_ID
+	WHERE SALARY > AVERAGE_DEPARMENT_OF_SALARY
+
+
+
+(OR)
+	SELECT EMP_ID,DEPT_ID,SALARY
+	FROM EMPLOYEE E1
+	WHERE SALARY > (SELECT AVG(SALARY) FROM EMPLOYEE E2
+	WHERE E1.DEPT_ID = E2.DEPT_ID)
+
+41. Using Correlated Subquery: Display the details of employees who have changed their roles at least twice?
+	
+	SELECT EMP.EMP_ID, EMP.EMP_NAME,COUNT(A.ROLE_ID) AS NO_OF_ROLES
+	FROM EMPLOYEE EMP JOIN ALLOCATION A 
+	ON EMP.EMP_ID = A.EMP_ID 
+	GROUP BY EMP.EMP_ID, EMP.EMP_NAME
+	HAVING COUNT(A.ROLE_ID) >= 2
+
+42.Display the departments that does not have employees(ALL POSSIBILITIES)?
+
+//USING NOT IN OR EXCEPT
+
+	SELECT dept_id,dept_name
+	FROM  DEPARTMENT
+	WHERE dept_id NOT IN (SELECT emp_id
+	FROM EMPLOYEE
+	ORDER BY dept_id)
+
+// USING JOINS
+
+	SELECT D.dept_id,D.dept_name
+	FROM DEPARTMENT D RIGHT JOIN EMPLOYEE EMP
+	ON EMP.dept_id=D.dept_id
+
+43.Find the department which has employees(ALL POSSIBILITIES)?
+	
+	SELECT dept_id,dept_name
+	FROM  DEPARTMENT
+	WHERE dept_id IN (SELECT emp_id
+	FROM EMPLOYEE
+	ORDER BY dept_id)
+
+44. Using ROLL UP and CUBE
+Generate a report: Project ID Role ID No of Employees (FOR ROLLUP)
+	
+	SELECT PROJECT_ID, ROLE_ID, COUNT(EMP_ID) AS"NO_OF_EMPLOYEES"
+	FROM ALLOCATION
+	GROUP BY ROLLUP (PROJECT_ID,ROLE_ID)
+	ORDER BY PROJECT_ID,ROLE_ID
+
+
+
+(FOR CUBE)
+
+	SELECT PROJECT_ID, ROLE_ID, COUNT(EMP_ID) AS"NO_OF_EMPLOYEES"
+	FROM ALLOCATION
+	GROUP BY CUBE (PROJECT_ID,ROLE_ID)
+	ORDER BY PROJECT_ID,ROLE_ID
+
+
+
+45. Using ROLL UP and CUBE
+    Generate a report: Employee ID Project ID Total salary (FOR ROLLUP)
+
+	SELECT EMP_ID,PROJECT_ID,SUM((TO_DATE - FROM_DATE)*AMOUNT_PER_DAY) AS"TOTAL_SALARY"
+	FROM ALLOCATION
+	GROUP BY ROLLUP (EMP_ID,PROJECT_ID)
+	ORDER BY EMP_ID,PROJECT_ID
+
+
+
+(FOR CUBE)
+
+	SELECT EMP_ID,PROJECT_ID,SUM((TO_DATE - FROM_DATE)*AMOUNT_PER_DAY) AS"TOTAL_SALARY"
+	FROM ALLOCATION
+	GROUP BY CUBE (EMP_ID,PROJECT_ID)
+	ORDER BY EMP_ID,PROJECT_ID
+
+46.Prepare a hierarchical report: LEVEL EMPLOYEE
+
+	1 raja
+		2 anil
+			3 anjali
+
+( hint: start with emp_name='raja' 
+
+	SELECT EMP_NAME AS EMPLOYEE
+	FROM EMPLOYEE
+
+47.Using CASE/DECODE
+Emp ID Number of Skills Description
+
+If Employee have,
+i) more than 5 no of skills: Description is “Major Resource”
+ii) more than 3 no of skills : Description is “Useful Resource”
+iii) more than 1 no of skills : Description is “Resource”
+
+	SELECT EMP_ID,COUNT(SKILL_ID) AS "NO. OF SKILLS",
+	CASE
+		WHEN COUNT(SKILL_ID)>5 THEN 'MAJOR RESOURCE'
+		WHEN COUNT(SKILL_ID)>3 THEN 'USEFUL RESOURCE'
+		WHEN COUNT(SKILL_ID)>1 THEN 'RESOURCE'
+		END DESCRIPTION	
+	FROM EMPLOYEESKILL
+	GROUP BY EMP_ID
+
+48. Generate a report :(Emp ID,No of leaves,Description)
+
+	If no of leaves is greater than 6, Description is “Loss of Pay”
+	If no of leaves is less than or equal to 6, Description is “No loss of pay”
+	If no of leaves is equal to zero, Description is “Bonus”
+
+
+	SELECT EMP_ID, SUM(CASUAL_LEAVE+SICK_LEAVE+PRIVILEGE_LEAVE) AS 'NO_OF_LEAVES',
+	CASE
+		WHEN SUM(CASUAL_LEAVE+SICK_LEAVE+PRIVILEGE_LEAVE)>6 THEN 'LOSS OF PAY'
+		WHEN SUM(CASUAL_LEAVE+SICK_LEAVE+PRIVILEGE_LEAVE)<= 6 THEN 'NO LOSS OF PAY'
+		WHEN SUM(CASUAL_LEAVE+SICK_LEAVE+PRIVILEGE_LEAVE) = 0 THEN 'BONUS'
+		END DESCRIPTION
+	FROM EMPLOYEE 
+	GROUP BY EMP_ID
+
+49.List TOP 5 salaried Employees?
+
+//FIRST METHOD
+	
+	SELECT DEPT_ID,MAX(SALARY)
+	FROM EMPLOYEE
+	GROUP BY DEPT_ID
+	ORDER BY MAX(SALARY) DESC
+	LIMIT 5
+
+//SECOND METHOD
+	
+	
+	
+50.List TOP 3 Departments (with respect to maximum no of employees)?
+
+//FIRST METHOD
+
+	SELECT DEPT_ID,COUNT(EMP_ID)
+	FROM EMPLOYEE
+	GROUP BY DEPT_ID
+	ORDER BY COUNT(EMP_ID) DESC
+	LIMIT 3
+
+//SECOND METHOD
+	
+	WITH R AS (SELECT DENSE_RANK () OVER (ORDER BY COUNT(EMP_ID)) AS 'DEPARTMENTS',* FROM EMPLOYEE) 
+	SELECT * FROM R WHERE DEPARTMENTS BETWEEN 1 AND 5
+
+	
+
+51.For each Department display the 2nd maximum salary earner?
+
+//USING WITH
+
+	WITH T AS
+	(SELECT * DENSE_RANK() OVER (ORDER BY SALARY Desc) AS Rnk FROM Employee)
+	SELECT EMP_NAME
+	FROM T
+	WHERE Rnk=2;
+
+//ANOTHER WAY
+	
+	SELECT DEPT_ID, SALARY
+	FROM (SELECT DEPT_ID, SALARY, DENSE_RANK() 
+    		OVER(PARTITION BY DEPT_ID ORDER BY SALARY DESC) AS RNK FROM EMPLOYEE) TMP 
+	WHERE RNK = 2
+
+//ANOTHER WAY 
+	
+	SELECT max(e1.SALARY), e1.DEPT_ID
+	FROM EMPLOYEE e1
+	WHERE SALARY < (SELECT max(SALARY) FROM EMPLOYEE e2 WHERE e2.DEPT_ID = e1.DEPT_ID)
+	GROUP BY e1.DEPT_ID
+
+
+	
+52.Generate a report:(Emp Name,Number of skills)
+
+	SELECT E.EMP_NAME,COUNT(ES.SKILL_ID) AS No_of_Skills
+	FROM EMPLOYEE E JOIN EMPLOYEESKILL ES
+	ON E.EMP_ID=ES.EMP_ID
+	GROUP BY E.EMP_NAME
+
+	
+53.Generate a report :(Emp Name ,Number of recharges done so far)
+
+
+	SELECT EMP.EMP_NAME,COUNT(DATE_OF_REC) AS 'No_of_recharges_done_sofar'
+	FROM EMPLOYEE EMP JOIN MOBILERECHARGE MR
+	ON EMP.MOBILE_NO=MR.MOBILE_NO
+	GROUP BY EMP.EMP_NAME
+
+54.Delete duplicate rows from Employee table(Using ROWID)?
+
+	DELETE FROM EMPLOYEE
+	WHERE ROWID NOT IN
+	(SELECT MIN(ROWID)
+	FROM EMPLOYEE
+	GROUP BY EMP_ID, EMP_NAME, SALARY, DEPT_ID, MGR_ID);
+
+

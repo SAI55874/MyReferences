@@ -1,0 +1,350 @@
+CrossTab or pivot
+All possibilities(Set,Joins,Not In ,Co-related/NotExists)
+Rank Function/Dence Rank
+RollUp And Cube
+Top N analysis
+Sub querry
+
+
+
+
+----------------------------------------------
+SELECT c.category_code
+FROM category c
+WHERE NOT EXISTS(SELECT p.category_code
+			FROM product p
+			ON p.Category_code=c.category_code)
+
+_____________________________________________________________
+
+
+
+SELECT c.category_code
+FROM category c
+LEFT JOIN product p
+ON p.category_code=c.category_code
+WHERE p.category_code is NULL
+
+
+_____________________________________________________________
+
+
+Display the details of in active sales rep
+---------------------------------------
+
+**NOT IN**
+
+
+SELECT salesrep_id
+FROM salesrep
+WHERE salesrep_id NOT IN (SELECT salesrep_id
+				FROM order_master)
+
+__________________________________________________
+
+**SET OPERATOR**
+
+
+SELECT salesrep_id
+FROM salesrep
+EXCEPT
+(SELECT salesrep_id
+	FROM order_master)
+
+____________________________________________________
+
+**LEFT JOIN**
+
+SELECT sal.salesrep_id
+FROM salesrep sal
+LEFT JOIN order_master om
+ON om.salesrep_id = sal.salesrep_id
+WHERE sal.salesrep_id is NULL
+
+
+SELECT om.salesrep_id
+FROM order_master om
+LEFT JOIN salesrep sal
+ON sal.salesrep_id = om.salesrep_id
+WHERE om.salesrep_id is NULL
+_____________________________________________
+
+
+
+SELECT om.salesrep_id
+FROM order_master om
+WHERE NOT EXISTS (SELECT sal.salesrep_id
+			FROM salesrep sales )
+
+_______________________________________________________
+
+Find the no of orders which is processed in 2010
+
+CREATE extension Table Func
+SELECT * 
+FROM crosstab(SELECT salesrep_id,salesrep_name,EXTRACT(MONTH from om.ordermaster),COUNT(od.order_code) JOIN ordermaster om
+		ON s.salesrep s JOIN Ordermaster) 
+JOIN order_detail od
+ON od.order_code = om.order_code
+JOIN product p
+ON p.product_code = od.product_code
+WHERE EXTRECT(yerar from order_code)
+____________________________________________________________
+Cross tab 
+Find the no of orders processed by each month in the year 2010
+
+
+
+CREATE EXTENSION TABLEFUNC
+select * 
+from crosstab('SELECT sr.salesrep_id,
+		sr.salesrep_name,
+		EXTRACT(MONTH FROM om.order_date),
+		SUM(od.qty_ordered*pr.price)
+	FROM salesrep sr JOIN order_master om
+	ON sr.salesrep_id=om.salesrep_id
+	JOIN order_detail od
+	ON om.order_code=od.order_code
+	JOIN product pr
+	ON od.product_code=pr.product_code
+	WHERE EXTRACT(YEAR FROM om.order_date)=2010
+	GROUP BY sr.salesrep_id,sr.salesrep_name,EXTRACT(MONTH FROM om.order_date) 
+	order by 1',
+	'select m from generate_series(1,12) m') 
+as 
+	(salesrep_id varchar,
+	salesrep_name varchar,
+	"Jan" int,
+	"Feb" int,
+	"Mar" int,
+	"Apr" int,
+	"May" int,
+	"Jun" int,
+	"Jul" int,
+	"Aug" int,
+	"Sep" int,
+	"Oct" int,
+	"Nov" int,
+	"Dec" int);
+
+
+**preeti mam
+
+
+CREATE EXTENSION TABLEFUNC
+select * 
+from crosstab('SELECT sr.salesrep_id,
+		sr.salesrep_name,
+		EXTRACT(MONTH FROM om.order_date),
+		SUM(od.qty_ordered*pr.price)
+	FROM salesrep sr JOIN order_master om
+	ON sr.salesrep_id=om.salesrep_id
+	JOIN order_detail od
+	ON om.order_code=od.order_code
+	JOIN product pr
+	ON od.product_code=pr.product_code
+	WHERE EXTRACT(YEAR FROM om.order_date)=2010
+	GROUP BY sr.salesrep_id,sr.salesrep_name,EXTRACT(MONTH FROM om.order_date),pr.product_code
+	ORDER BY pr.product_code','SELECT m from generate_series(1,12) m')
+AS 
+(product_code CHAR(4),
+	"Jan" int,
+	"Feb" int,
+	"Mar" int,
+	"Apr" int,
+	"May" int,
+	"Jun" int,
+	"Jul" int,
+	"Aug" int,
+	"Sep" int,
+	"Oct" int,
+	"Nov" int,
+	"Dec" int);
+____________________________________________________
+
+SELECT (ColumnNames) 
+FROM (TableName) 
+PIVOT
+ ( 
+   AggregateFunction(ColumnToBeAggregated)
+   FOR PivotColumn IN (PivotColumnValues)
+ ) AS (Alias) //Alias is a temporary name for a table
+
+
+**Pivot**
+
+
+select  * 
+from (select salesrep_id,
+		order_code,
+		year(order_date) as 'year'
+	from order_master) as temp
+pivot
+(
+ count(order_code)
+ for salesrep_id
+ IN([SP08],[SP02],[SP15])) as pivottable
+
+____________________________________________________________
+Using ROLL UP and CUBE
+Generate a report: 
+Project ID 	Role ID 	No of Employee
+
+
+
+SELECT project_id
+	,role_id
+        ,COUNT(emp_id) AS 'no_of_employees'
+FROM allocation
+GROUP BY emp_id,role_id WITH ROLLUP
+
+
+//CUBE not working in MySQL
+
+
+
+
+
+SELECT project_id
+	,role_id
+        ,COUNT(emp_id) AS 'no_of_employees'
+FROM allocation
+GROUP BY CUBE (emp_id,role_id)
+
+_____________________________________________________________________
+
+
+**Differnce between Sub Query and co_related sub query**
+
+***Co-related SubQuery:
+A Corelated Sub-query should refer its parent(main Query) Table in it. For example See find the Nth max salary by Co-related Sub-query:
+
+SELECT Salary 
+FROM Employee E1
+WHERE N-1 = (SELECT COUNT(*)
+             FROM Employee E2
+             WHERE E1.salary <E2.Salary) 
+
+Simple subquery doesn't use values from the outer query and is being calculated only once:
+
+SELECT id, first_name 
+FROM student_details 
+WHERE id IN (SELECT student_id
+FROM student_subjects 
+WHERE subject= 'Science'); 
+CoRelated Subquery Example -
+
+Query To Find all employees whose salary is above average for their department
+
+ SELECT employee_number, name
+       FROM employees emp
+       WHERE salary > (
+         SELECT AVG(salary)
+           FROM employees
+           WHERE department = emp.department);
+_________________________________________________________________________________________
+
+FROM
+JOIN
+WHERE 
+GROUP BY
+HAVING  
+SELECT
+ORDER BY
+__________________________________________________________________________________________
+
+
+ANSWERS FOR TIMESHEET
+
+1)TOP 3 PROJECTS BASED ON EMPLOYEE COUNT.SELECT PROJECT_ID,COUNT(EMP_ID)
+FROM (SELECT PROJECT_ID,COUNT(EMP_ID),
+DENSE_RANK() OVER (ORDER BY COUNT(EMP_ID DESC)AS RNK
+FROM ALLOCATION)TMP
+WHERE RNK<=3;2)
+
+
+
+FIND THE EMPLOYEES WHO HAS MORE THAN 6 SKILLS.
+
+
+SELECT EMP_ID,COUNT(SKILL_ID)
+FROM SKILLS
+GROUP BY EMP_ID
+HAVING COUNT(SKILL_ID)>=6
+3)PROJECTWISE,EMPLOYEEWISE,SUM UP AMOUNT_PER_DAY.(USING ROLLUP)
+SELECT PROJECT_ID,EMP_ID,SUM(AMOUNT_PER_DAY)
+FROM ALLOCATION
+GROUP BY ROLLUP(PROJECT_ID,EMP_ID)
+ORDER BY PROJECT_ID,EMP_ID4)SELECT P.PROJECT_NAME,A.COUNT(EMP_ID)AS 'NO OF EMPLOYEES'
+CASE
+WHEN COUNT(EMP_ID)>30 THEN 'CRITICAL PROJECT'
+WHEN COUNT(EMP_ID)<30 THEN 'NORMAL PROJECT'
+END PERFORMANCE
+FROM ALLOCATION A JOIN T_PROJECT P
+ON A.PROJECT_ID=P.PROJECT_ID
+GROUP BY P.PROJECT_ID5)
+CREATE EXTENSION func
+select * from crosstab(
+'SELECT pr.project_name,COUNT(emp_id) AS noofemp
+FROM allocation al
+JOIN t_project pr
+ON pr.project_id= al.project_id
+GROUP BY pr.project_name order by 1',
+'select m from generate_series(1,6) m'
+) as (
+project_name varchar,
+"Jan" int,
+"Feb" int,
+"Mar" int,
+"Apr" int,
+"May" int,
+"Jun" int);
+
+
+6)SELECT THE SKILL WHICH HAS NOT BEEN ACQUIRED BY ANY EMPLOYEE.(ALL POSSIBILITIES)
+//SET OPERATORS//
+SELECT SKILL_ID,SKILL_NAME
+FROM SKILL
+EXCEPT (SELECT SKILL_ID
+FROM EMPLOYEESKILL) //NOT IN //
+SELECT SKILL_ID,SKILL_NAME
+FROM SKILL
+WHERE SKILLS_ID NOT IN (SELECT SKILL_ID
+FROM EMPLOYEESKILL) //CORRELATED SUB QUERY//
+SELECT SKILL_ID,SKILL_NAME
+FROM SKILL
+NOT EXISTS (SELECT SKILL_ID
+FROM EMPLOYEESKILL) //JOIN//
+SELECT S.SKILL_ID,S.SKILL_NAME
+FROM SKILL S JOIN EMPLOYEESKILLS ES
+ON ES.SKILLS_ID=S.SKILLS_ID
+WHERE SKILLS_IS IS NULL;
+
+
+
+7)FIND SKILL IS NOT ACQUIRED BY MAXIMUM NO OF EMPLOYEE.SELECT skill_id, COUNT(emp_id) AS "NO OF EMP"
+FROM employeeskill
+GROUP BY skill_id
+HAVING COUNT(emp_id)>= ALL(
+SELECT COUNT(emp_id)
+FROM employeeskill
+GROUP BY skill_id)8)FIND EMPLOYEE WHO IS EARINING THAN AVG OF THE DEPARTMENT SALARY?
+WITH TMP AS(SELECT DEPT_ID, AVG(SALARY) AS AVERAGE_DEPT_OF_SALARY
+FROM EMPLOYEE
+GROUP BY DEPT_ID) SELECT EMP_ID, SALARY, AVERAGE_DEPT_OF_SALARY
+FROM EMPLOYEE
+INNER JOIN TMP
+ON EMPLOYEE.DEPT_ID = TMP.DEPT_ID
+WHERE SALARY > AVERAGE_DEPT_OF_SALARY
+9.EXPLAIN THE SITUATION WHERE INDEX SHOULD NOT BE USED ?
+Indexes cannot be used when we have large no of data.
+
+
+10.Explain the order of execution in the query?
+SELECT
+FROM
+WHERE
+GROUP BY
+HAVING
+ORDER BY
+

@@ -1,0 +1,126 @@
+------------------------LIBRARY DOMIN-------------------
+
+
+1) How many books are there in each category, in the library
+
+
+SELECT book_category
+		,COUNT(book_id)
+FROM books
+GROUP BY book_category
+
+_______________________________________________________________________________________________________
+
+2) Title wise how may copies of books are available in the ‘rdbms’ 
+category?
+
+
+
+SELECT COUNT(book_id)
+		,book_category
+FROM books
+GROUP BY title
+HAVING book_category = 'RDBMS'
+
+______________________________________________________________________________________________________
+3) Prepare a list of the latest edition of the books in category/title sequence, 
+in the following format:
+Category			 title edition
+
+
+
+
+SELECT A.book_category
+		,A.title
+        ,edition
+FROM
+	(SELECT book_category
+		,title
+        ,edition
+        ,RANK()OVER( PARTITION BY book_category ORDER BY ye_of_pub DESC) AS rk
+	FROM books) A
+WHERE rk = 1;
+
+
+_________________________________________________________________________________________________________
+4) Which publisher(s) books are the maximum available in the library?
+
+
+
+SELECT A.book_id
+		,A.title
+FROM
+	(SELECT book_id
+		,title
+        ,COUNT(publisher_id)
+        ,RANK() OVER(ORDER BY COUNT(publisher_id) DESC) AS rk
+	FROM books
+    GROUP BY publisher_id) A
+WHERE rk =1;
+
+
+
+___________________________________________________________________________________________________________
+5) Prepare a list of books that are due as on date, in delay descending 
+sequence , in the following format:
+Title 	member name 	due date	 delay
+
+
+
+SELECT bk.title
+		,mm.member_name
+        ,bt.due_date
+        ,DATEDIFF(bt.return_date,bt.due_date) AS 'Delay'
+FROM books bk
+JOIN book_transaction bt
+ON bt.book_id = bk.book_id
+JOIN members mm
+ON mm.member_id = bt.member_id
+WHERE DATEDIFF(bt.return_date,bt.due_date) >0
+ORDER BY delay DESC;
+
+
+
+_____________________________________________________________________________________________________________
+6) What are the categories of books published by ‘willey publications’
+
+SELECT bk.book_category
+FROM books bk
+JOIN publishers pb
+ON pb.publisher_id = bk.publisher_id
+WHERE publisher_name = 'willey'
+
+______________________________________________________________________________________________________________
+
+7) Which are the categories of books that are least utilised
+
+
+SELECT A.book_category
+FROM(SELECT bk.book_category
+		,RANK() OVER(ORDER BY COUNT(bk.book_category) ASC) AS rk
+	FROM books bk
+	JOIN book_transaction bt
+	ON bt.book_id = bk.book_id
+	GROUP BY bk.book_category) A
+WHERE rk=1;
+
+_____________________________________________________________________________________________________________
+
+8) Which are the categories of books that are most utilised
+
+SELECT A.book_category
+FROM(SELECT bk.book_category
+		,RANK() OVER(ORDER BY COUNT(bk.book_category) DESC) AS rk
+	FROM books bk
+	JOIN book_transaction bt
+	ON bt.book_id = bk.book_id
+	GROUP BY bk.book_category) A
+WHERE rk=1;
+
+
+_______________________________________________________________________________________________________________
+
+9) Which books were not lent during the last quarter of the year(oct-dec 2003)
+
+
+

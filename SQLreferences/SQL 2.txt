@@ -1,0 +1,850 @@
+				TIME SHEET DOMAIN
+
+1.Which PROJECT has maximum number of EMPLOYEES?
+
+
+
+
+SELECT emp.project_name
+FROM(SELECT t_project.project_name
+		,COUNT(employee.EMP_ID) AS 'No_of_emp'
+        	,RANK() OVER( ORDER BY COUNT(employee.EMP_ID) DESC ) AS 'max_emp' 
+	FROM allocation
+	LEFT JOIN t_project
+	ON t_project.project_id = allocation.project_id
+	RIGHT JOIN employee
+	ON employee.emp_id = allocation.emp_id
+	GROUP BY t_project.PROJECT_id
+	ORDER BY no_of_emp DESC) emp
+WHERE  max_emp= 1;
+
+
+
+_________________________________________________________________________________
+2.Which EMPLOYEE has not yet been allocated to any PROJECT?
+
+
+
+SELECT employee.emp_id
+	,employee.emp_name
+FROM allocation
+RIGHT JOIN employee
+ON employee.emp_id = allocation.emp_id
+WHERE employee.emp_id NOT IN (SELECT allocation.emp_id
+					FROM allocation)
+GROUP BY employee.emp_id
+
+
+
+
+
+__________________________________________________________________________________
+3.Which role played by the employee 'E03' frequently?
+
+
+SELECT a.emp_id
+	,a.role_title
+FROM(SELECT employee.emp_id
+		,role.role_title
+		,COUNT(role.role_title) AS 'no_t'
+        	,RANK()OVER(ORDER BY COUNT(role_title) DESC) AS rk
+	FROM allocation
+	LEFT JOIN role
+	ON role.role_id = allocation.role_id
+	RIGHT JOIN employee
+	ON employee.emp_id = allocation.emp_id
+	WHERE employee.emp_id = 'E03') a
+WHERE rk = 1;
+
+
+
+___________________________________________________________________________________
+4.Which is the costliest Project?
+
+
+SELECT A.project_id
+	,A.cost_of_projects 
+FROM (SELECT SUM(DATEDIFF(to_date,from_date)*amount_per_day) AS 'Cost_of_projects'
+		,project_id
+		,RANK()OVER( ORDER BY SUM(DATEDIFF(to_date,from_date)*amount_per_day) DESC) AS rk
+	FROM allocation
+	GROUP BY project_id) A
+WHERE rk = 1;
+
+
+___________________________________________________________________________________
+5.How many employees were there in costliest Project
+
+
+
+SELECT A.project_id
+		,A.cost_of_projects
+		,A.no_of_emps
+FROM
+	(SELECT SUM(DATEDIFF(to_date,from_date)*amount_per_day) AS 'Cost_of_projects'
+		,COUNT(emp_id) AS 'no_of_emps'
+        	,project_id
+		,RANK()OVER( ORDER BY SUM(DATEDIFF(to_date,from_date)*amount_per_day) DESC) AS rk
+	FROM allocation
+	GROUP BY project_id) A
+WHERE rk = 1;
+
+
+________________________________________________________________________________________
+6.Which is the cheapest Project in the year 2012?
+
+SELECT A.project_id
+	,A.cost_of_projects 
+FROM
+	(SELECT SUM(DATEDIFF(to_date,from_date)*amount_per_day) AS 'Cost_of_projects'
+		,project_id
+		,RANK()OVER( ORDER BY SUM(DATEDIFF(to_date,from_date)*amount_per_day) ASC) AS rk
+	FROM allocation
+	WHERE YEAR(from_date) = 2012 OR YEAR(to_date) = 2012
+	GROUP BY project_id) A
+WHERE rk = 1;
+
+________________________________________________________________________________________
+7.What is the salary of employee, who played maximum roles in Project 'P07'?
+
+
+
+WITH temp AS(SELECT t_project.project_id
+		,employee.emp_name
+        	,employee.salary
+        	,RANK() OVER(ORDER BY COUNT(allocation.role_id)DESC)
+	FROM allocation
+	LEFT JOIN t_project
+	ON t_project.project_id = allocation.project_id
+	RIGHT JOIN employee
+	ON employee.emp_id = allocation.emp_id
+	WHERE t_project.project_id = 'P07')
+SELECT temp.project_id
+	,emp_name
+FROM temp
+
+
+
+________________________________________________________________________________________
+8.How many projects are handled by senior most employee?
+
+
+SELECT employee.emp_name
+	,employee.hire_date
+    	,COUNT(allocation.project_id) AS 'No_of_projects'
+FROM employee
+LEFT JOIN allocation
+ON employee.emp_id = allocation.emp_id
+GROUP BY employee.emp_id
+ORDER BY hire_date ASC
+
+
+
+_________________________________________________________________________________________
+9.What is the total amount spent for unassigned employees?
+
+
+
+SELECT employee.emp_id 
+    ,(((2021-YEAR(employee.hire_date))*12-MONTH(employee.hire_date))+MONTH(NOW()) ) *salary AS 'Amount_spent'
+FROM employee
+LEFT JOIN allocation
+ON  employee.emp_id =allocation.emp_id 
+WHERE employee.emp_id NOT IN (SELECT emp_id
+					FROM allocation)
+GROUP BY employee.emp_id
+
+
+_________________________________________________________________________________________
+10.How many projects are completed till date (Assume to_date is completion date in Allocation table)?
+
+
+
+SELECT 
+	CASE 
+			WHEN to_date < NOW() THEN COUNT(project_id)
+			END AS 'completed_projects'
+	FROM allocation
+
+
+_________________________________________________________________________________________
+11.How many employees have worked for less than 10 Projects?
+
+SELECT MAX(rk) AS 'emp_lessthan_10projects'
+FROM
+	(SELECT emp_id
+		,count(emp_id) AS 'no_of_projects_worked'
+    		,RANK() OVER( ORDER BY emp_id DESC) AS rk
+	FROM allocation 
+	GROUP BY emp_id
+	HAVING COUNT(emp_id)<10) a
+
+
+__________________________________________________________________________________________
+12.How many employees are working with role 'R02' in project 'P04'?
+
+
+
+SELECT  COUNT(emp_id) AS 'employees'
+FROM allocation 
+WHERE project_id='P04'AND role_id ='R02';
+
+
+
+
+__________________________________________________________________________________________
+13.Which client has given maximum number of Projects?
+
+
+
+SELECT A.client_name
+		,A.no_of_projects
+FROM (SELECT  client_name
+		,COUNT(project_id) AS 'No_of_projects'
+		,RANK() OVER(ORDER BY COUNT(project_id) DESC)  AS rk
+	FROM t_project
+	GROUP BY client_name) A
+WHERE rk =1;
+
+
+_________________________________________________________________________________________
+14.Which employee has not been allocated to any project in the year 2010?
+
+
+SELECT 
+CASE
+	WHEN YEAR(from_date) != 2010 AND year(to_date) != 2010 THEN emp_id
+	END AS 'emp_not_allocated_in_2010'
+FROM allocation
+GROUP BY emp_id
+
+_______________________________________________________________________________
+15.Find the total number of days worked by the employee 'E04' in project 'P02'?
+
+
+SELECT emp_id
+	,project_id
+    	,DATEDIFF(to_date,from_date)
+FROM allocation
+WHERE project_id = 'P02' AND emp_id = 'E04'
+
+
+_________________________________________________________________________________________
+16.Which Project has been completed exactly on deadline date?
+
+
+SELECT pr.project_id
+FROM t_project pr
+JOIN allocation al
+ON al.project_id = pr.project_id
+WHERE pr.deadline IN (SELECT to_date
+			FROM allocation)
+GROUP BY project_id
+ 
+
+
+_________________________________________________________________________________________
+17.How many employees were working for the Project, which has crossed the deadline?
+
+
+SELECT A.project_id
+		,A.emp_count
+FROM (SELECT pr.project_id
+		,pr.deadline
+		,COUNT(al.emp_id) AS 'emp_count'
+	FROM t_project pr
+	JOIN allocation al
+	ON al.project_id = pr.project_id
+	GROUP BY pr.project_id
+	HAVING pr.deadline <ALL (SELECT MAX(to_date)
+				FROM allocation
+				GROUP BY project_id)) A 
+
+
+_________________________________________________________________________________________
+18.Which Project has been completed so earlier?
+
+
+SELECT pr.project_id
+		,pr.deadline
+FROM t_project pr
+JOIN allocation al
+ON al.project_id = pr.project_id
+WHERE pr.deadline <ALL (SELECT to_date
+			FROM allocation)
+GROUP BY project_id;
+
+_________________________________________________________________________________________
+19.Which Project has taken maximum duration?
+
+
+SELECT A.project_id
+		,A.total_days
+FROM
+(SELECT project_id
+        ,DATEDIFF(to_date,from_date) AS 'total_days'
+        ,RANK()OVER(ORDER BY DATEDIFF(to_date,from_date) DESC ) AS rk
+FROM allocation) A
+WHERE rk = 1;
+
+
+_________________________________________________________________________________________
+20.Prepare a report in following format 
+Emp Id Total Number of Days in bench
+
+
+
+SELECT al.emp_id
+		,DATEDIFF(al.from_date,em.hire_date)-DATEDIFF(al.to_date,al.from_date)
+FROM allocation al
+JOIN employee em
+ON em.emp_id=al.emp_id
+;
+
+
+__________________________________________________________________________________________
+21.Prepare a report in following format 
+Project Name Number of Employees
+
+
+
+
+SELECT pr.project_name
+		,count(al.emp_id) AS 'No_of_employee'
+FROM t_project pr
+LEFT JOIN allocation al
+ON al.project_id = pr.project_id
+GROUP BY al.project_id
+
+
+__________________________________________________________________________________________
+22.Prepare a report in following format 
+Role Name Number of Employees
+
+
+SELECT rl.role_title
+		,count(al.emp_id) AS 'No_of_employee'
+FROM role rl
+LEFT JOIN allocation al
+ON al.role_id = rl.role_id
+GROUP BY al.role_id;
+
+
+
+__________________________________________________________________________________________
+23.Prepare a report in following format 
+Emp Name Number of Projects
+
+
+SELECT em.emp_name
+		,count(al.project_id) AS 'no_of_projects'
+FROM employee em
+LEFT JOIN allocation al
+ON al.emp_id = em.emp_id
+GROUP BY al.emp_id;
+
+
+__________________________________________________________________________________________
+24.Prepare a report in following format 
+Emp Name Number of Roles
+
+
+SELECT em.emp_name
+		,count(al.role_id) AS 'no_roles'
+FROM employee em
+LEFT JOIN allocation al
+ON al.emp_id = em.emp_id
+GROUP BY al.emp_id;
+
+
+__________________________________________________________________________________________
+25.Prepare a report in this format 
+Role Name Number of Employees
+
+
+SELECT rl.role_title
+		,COUNT(al.emp_id) AS 'no_of_emps'
+FROM role rl
+LEFT JOIN allocation al
+ON al.role_id = rl.role_id
+GROUP BY al.role_id;
+
+
+____________________________________________________________________________________________
+26.Prepare a report in this format 
+Role Name Number of Projects
+
+
+
+SELECT  rl.role_title
+        ,COUNT(al.project_id) AS 'no_of_projects'
+FROM allocation al
+LEFT JOIN role rl
+ON rl.role_id = al.role_id
+GROUP BY al.project_id;
+
+
+
+____________________________________________________________________________________________
+27.Prepare a report in this format 
+Emp Name Role Name Number of Projects
+
+
+SELECT em.emp_name
+		,rl.role_title
+        	,COUNT(al.project_id) AS 'no_of_projects'
+FROM allocation al
+LEFT JOIN role rl
+ON rl.role_id = al.role_id
+LEFT JOIN employee em
+ON em.emp_id = al.emp_id
+GROUP BY al.project_id;
+
+
+____________________________________________________________________________________________
+28.Prepare a report in this format 
+Project Name Role Name Number of Employees
+
+
+SELECT pr.project_name
+		,rl.role_title
+        	,COUNT(al.emp_id) AS 'no_of_emps'
+FROM allocation al
+LEFT JOIN role rl
+ON rl.role_id = al.role_id
+LEFT JOIN employee em
+ON em.emp_id = al.emp_id
+LEFT JOIN t_project pr
+ON pr.project_id = al.project_id
+GROUP BY al.project_id;
+
+____________________________________________________________________________________________
+29.Prepare a report in this format 
+Role Name Emp Name Number of Projects
+
+SELECT rl.role_title
+		,em.emp_name
+        	,COUNT(al.project_id) AS 'no_of_projects'
+FROM allocation al
+LEFT JOIN role rl
+ON rl.role_id = al.role_id
+LEFT JOIN employee em
+ON em.emp_id = al.emp_id
+GROUP BY al.project_id;
+_____________________________________________________________________________________________
+30.Prepare a report in this format 
+Dept Id Number of Employees
+
+
+SELECT dept_id
+		,COUNT(emp_id) AS 'no_of_emps'
+FROM employee
+GROUP BY dept_id;
+
+
+_____________________________________________________________________________________________
+31.Prepare a report in this format 
+Mgr_id Number of Employees
+
+
+SELECT mgr_id
+		,COUNT(emp_id) AS 'no_of_emps'
+FROM employee
+GROUP BY dept_id;
+
+
+_____________________________________________________________________________________________
+32.Prepare a report in this format 
+Emp Name Role Name Project Name
+
+SELECT em.emp_name
+		,rl.role_title
+        	,pr.project_name
+FROM allocation al
+LEFT JOIN role rl
+ON rl.role_id = al.role_id
+LEFT JOIN employee em
+ON em.emp_id = al.emp_id
+LEFT JOIN t_project pr
+ON pr.project_id = al.project_id;
+
+____________________________________________________________________________________________
+33.Prepare a report in this format 
+Project id Emp id Total Amount collected
+ Sort the report with respect to the Total Amount collected in Descending Order.
+
+
+
+SELECT project_id,
+		emp_id,
+        (DATEDIFF(to_date,from_date) * Amount_per_day) AS 'Amount_collected'
+FROM allocation
+ORDER BY amount_collected DESC
+
+
+____________________________________________________________________________________________
+34.Prepare a report in this format 
+Emp id Role id Total Amount collected
+
+
+SELECT role_id,
+		emp_id,
+        (DATEDIFF(to_date,from_date) * Amount_per_day) AS 'Amount_collected'
+FROM allocation
+ORDER BY amount_collected DESC
+
+____________________________________________________________________________________________
+35.Prepare a report in this format 
+Emp id Role id Project id Total Amount collected
+Sort the report with respect to the Total Amount collected in Descending Order.
+
+SELECT emp_id,
+        role_id,
+        project_id,
+        (DATEDIFF(to_date,from_date) * Amount_per_day) AS 'Amount_collected'
+FROM allocation
+ORDER BY amount_collected DESC;
+
+
+_____________________________________________________________________________________________
+36.Prepare a report in this format ?
+ 
+Emp id Mgr Id Comments
+123 432 Has Manager
+456 No Manger
+125 456 Has Mange
+
+
+
+SELECT emp_id
+        ,mgr_id
+        ,CASE
+		WHEN mgr_id = NULL THEN 'No manager'
+        	WHEN mgr_id != NULL THEN 'Has manager'
+        END AS 'Comments'
+FROM employee;
+
+_________________________________________________________________________________________
+
+
+37. Prepare a report in this format 
+ Ram Works for Ashok 
+ Adam works for Akbar
+ Where Ram is employee name and Ashok is his corresponding manager
+
+
+
+
+SELECT em.emp_name  AS 'employee'
+		,'works for' AS ' '
+		, mgr.emp_name AS 'Manager'
+FROM employee em
+JOIN employee mgr
+ON mgr.emp_id = em.mgr_id;
+
+
+
+
+
+
+__________________________________________________________________________________________
+38.Which employees earns more than his/her manager?
+
+
+
+SELECT em.emp_name  AS 'employee'
+FROM employee em
+JOIN employee mgr
+ON mgr.emp_id = em.mgr_id
+WHERE em.salary > mgr.salary
+
+
+___________________________________________________________________________________________
+39.Which manager joined after his/her sub ordinates?
+
+
+
+
+SELECT  mgr.emp_name AS 'Manager'
+FROM employee em
+JOIN employee mgr
+ON mgr.emp_id = em.mgr_id
+WHERE mgr.hire_date>em.hire_date
+GROUP BY mgr.emp_id;
+
+--------------------
+
+SELECT 
+CASE 
+	WHEN mgr.hire_date>em.hire_date THEN mgr.emp_name 
+        END AS 'mgr_joined_after_emp'
+FROM employee em
+JOIN employee mgr
+ON mgr.emp_id = em.mgr_id
+GROUP BY mgr.emp_id;
+___________________________________________________________________________________________
+40.Using Correlated Subquery and WITH clause
+ Find all employees who earns more than the average salary of his/her department?
+
+
+
+
+WITH temp AS
+(SELECT  emp_name
+		,salary
+FROM employee 
+)
+SELECT 
+	CASE
+        WHEN salary > (SELECT AVG(salary) FROM employee) THEN emp_name
+        END AS 'salary > avgsalary'
+FROM temp;
+
+
+
+___________________________________________________________________________________________
+
+41. Using Correlated Subquery:
+Display the details of employees who have changed their roles at least twice?
+
+
+
+SELECT 
+CASE
+	WHEN A.roles_changed>1 THEN A.emp_id
+    END AS 'Emp_changed_role_twice'
+FROM(SELECT emp_id
+		,COUNT(role_id) AS 'roles_changed'
+	FROM allocation
+	GROUP BY emp_id) A;
+
+
+
+___________________________________________________________________________________________
+42.Display the departments that does not have employees(ALL POSSIBILITIES)?
+
+
+SELECT dp.dept_id
+FROM employee em
+LEFT JOIN department dp
+ON  dp.dept_id=em.dept_id
+WHERE dp.dept_id NOT IN (SELECT dept_id
+				FROM employee)
+
+--------------------------------------
+
+SELECT dp.dept_id
+		,em.dept_id
+FROM employee em
+LEFT JOIN department dp
+ON  dp.dept_id=em.dept_id
+WHERE em.dept_id IS NULL;
+---------------------------------------
+
+SELECT dp.dept_id
+		,em.dept_id
+FROM employee em
+LEFT JOIN department dp
+ON  dp.dept_id=em.dept_id
+GROUP BY dp.dept_id
+HAVING dp.dept_id =ALL ( SELECT dept_id
+				FROM employee)
+-------------------------------------------
+// Except AND Minus is not working in mysql
+
+
+SELECT dp.dept_id
+FROM department dp
+
+EXCEPT
+SELECT em.dept_id
+FROM employee em;
+___________________________________________________________________________________________
+43.Find the department which has employees(ALL POSSIBILITIES)?
+
+
+SELECT dp.dept_id
+FROM employee em
+LEFT JOIN department dp
+ON  dp.dept_id=em.dept_id
+WHERE dp.dept_id IN (SELECT dept_id
+				FROM employee);
+
+-------------------------------------------
+SELECT dp.dept_id
+FROM employee em
+LEFT JOIN department dp
+ON  dp.dept_id=em.dept_id
+WHERE dp.dept_id IS NOT NULL;
+--------------------------------------------
+SELECT dp.dept_id
+FROM employee em
+LEFT JOIN department dp
+ON  dp.dept_id=em.dept_id
+GROUP BY dp.dept_id
+HAVING dp.dept_id IN ( SELECT dept_id
+				FROM employee);
+--------------------------------------------
+
+SELECT dp.dept_id
+FROM department dp
+LEFT JOIN employee em
+ON em.dept_id = dp.dept_id
+UNION
+SELECT em.dept_id
+FROM employee em
+RIGHT JOIN department dp
+ON dp.dept_id = em.dept_id;
+_______________________________________________________________________________________________
+44.Using ROLL UP and CUBE
+Generate a report: 
+Project ID 	Role ID 	No of Employee
+
+
+
+SELECT project_id
+	,role_id
+        ,COUNT(emp_id) AS 'no_of_employees'
+FROM allocation
+GROUP BY emp_id,role_id WITH ROLLUP
+
+
+//CUBE not working in MySQL
+
+SELECT project_id
+	,role_id
+        ,COUNT(emp_id) AS 'no_of_employees'
+FROM allocation
+GROUP BY CUBE (emp_id,role_id)
+
+_____________________________________________________________________________________________________
+45. Using ROLL UP and CUBE
+Generate a report: 
+Employee ID 		Project ID 		Total salary
+
+
+SELECT emp_id
+		,project_id
+        ,SUM(TIMESTAMPDIFF(DAY,from_date,to_date)*Amount_per_day) AS 'total_salary'
+FROM allocation
+GROUP BY emp_id,project_id WITH ROLLUP;
+
+
+SELECT emp_id
+		,project_id
+        ,SUM(TIMESTAMPDIFF(DAY,from_date,to_date)*Amount_per_day) AS 'total_salary'
+FROM allocation
+GROUP BY CUBE (emp_id,project_id)
+
+____________________________________________________________________________________________________
+47.Using CASE/DECODE
+Emp ID Number of Skills Description
+ If Employee have,
+ i) more than 5 no of skills: Description is “Major Resource”
+ ii) more than 3 no of skills : Description is “Useful Resource”
+ iii) more than 1 no of skills : Description is “Resource”
+
+
+
+SELECT ems.emp_id,
+		(CASE
+			WHEN COUNT(ems.skill_id)>5 THEN 'Major_resource'
+            WHEN COUNT(ems.skill_id)>3 THEN 'useful_resource'
+            WHEN COUNT(ems.skill_id)>1 THEN 'resource'
+		END) AS 'desc'
+FROM employeeskill ems
+JOIN skill sk
+ON sk.skill_id = ems.skill_id
+GROUP BY ems.emp_id;
+
+_____________________________________________________________________________________________________
+
+48. Generate a report :
+Emp ID No of leaves Description
+If no of leaves is greater than 6, Description is “Loss of Pay”
+If no of leaves is less than or equal to 6, Description is “No loss of pay”
+If no of leaves is equal to zero, Description is “Bonus”
+
+
+SELECT emp_id,
+		SUM(casual_leave+sick_leave) AS 'No_of_leaves' ,
+        (CASE
+			WHEN SUM(casual_leave+sick_leave)>6 THEN 'Loss in pay'
+            WHEN SUM(casual_leave+sick_leave)<=6 THEN 'No loss in pay'
+            WHEN SUM(casual_leave+sick_leave)=0 THEN 'Bonus'
+		END) AS 'desc'
+FROM employee
+GROUP BY emp_id
+
+______________________________________________________________________________________________________
+49.List TOP 5 salaried Employees?
+
+
+WITH temp AS(SELECT emp_id
+		,salary
+		,RANK()OVER(ORDER BY salary DESC) AS rk
+FROM employee)
+SELECT temp.emp_id
+		,temp.salary
+FROM temp
+WHERE rk <6
+
+_____________________________________________________________________________________________________
+50.List TOP 3 Departments (with respect to maximum no of employees)?
+
+
+WITH tem AS(SELECT dept_id
+		,COUNT(emp_id) AS 'no_of_emps'
+        ,RANK()OVER(ORDER BY COUNT(emp_id) DESC) AS rk
+FROM employee
+GROUP BY dept_id)
+SELECT tem.dept_id
+		,tem.no_of_emps
+FROM tem
+WHERE rk <4
+
+
+_____________________________________________________________________________________________________
+51.For each Department display the 2nd maximum salary earner?
+
+
+SELECT A.dept_id
+FROM
+(SELECT dept_id
+		,RANK() OVER(PARTITION BY dept_id ORDER BY salary DESC) AS rk
+FROM employee) A
+WHERE rk <= 2;
+
+
+______________________________________________________________________________________________________
+52.Generate a report:
+Emp Name 	Number of skills
+
+
+
+SELECT em.emp_name
+		,COUNT(sk.skill_id)
+FROM employee em
+JOIN employeeskill ems
+ON ems.emp_id = em.emp_id
+JOIN skill sk
+ON sk.skill_id = ems.skill_id
+GROUP BY em.emp_id;
+
+________________________________________________________________________________________________________
+53.Generate a report :
+Emp Name		 Number of recharges done so far
+
+
+SELECT em.emp_name
+		,COUNT(rc.mobile_no) AS 'NO_of_recharges' 
+FROM employee em
+JOIN mobilerecharge rc
+ON rc.mobile_no = em.mobile_no
+GROUP BY rc.mobile_no;
+
+
+___________________________________________________________________________________________________________
+
+
+
