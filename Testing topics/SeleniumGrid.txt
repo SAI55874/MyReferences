@@ -1,0 +1,15 @@
+java -jar selenium-server-4.1.4.jar -role hub
+
+
+java -jar selenium-server-standalone-3.5.3.jar -role hub
+
+
+java -jar selenium-server-standalone-3.5.3.jar -role node -hub http://172.16.51.228:4444/grid/register/ -port 5556
+
+
+java -Dwebdriver.chrome.driver="chromedriver" -jar selenium-server-standalone-3.5.3.jar -role node -hub http://192.168.43.157:4444/grid/register/ -port 5556
+
+java -jar selenium-server-standalone-3.5.3.jar -role node -port 5572 -hub http://192.168.43.157:4444/grid/register -hubHost "HTCLT2602" -host "nodeHTCLT2602"
+
+java -Dwebdriver.chrome.driver="chromedriver" -jar selenium-server-standalone-3.5.3.jar -role node -hub http://172.16.51.228:4444 -port 5556
+

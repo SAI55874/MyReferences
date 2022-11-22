@@ -1,0 +1,303 @@
+
+
+A)
+
+//Check whether the “page” value is 2
+// Tests
+pm.test("Your test name", function () {
+    var jsonData = pm.response.json();
+    pm.expect(jsonData.page).to.eql(2);
+});
+
+//Check whether the “email id” contains @ and .
+// Tests
+pm.test("Body matches string", function () {
+    pm.expect(pm.response.text()).to.include("@");
+     pm.expect(pm.response.text()).to.include(".");
+});
+
+//Check whether “first name” and “last name” contains only String
+// Tests
+pm.test("Body is correct", function () {
+    pm.response.to.have.body("response_body_string");
+});
+
+//Check whether the response contains a string “avatar”
+// Tests
+pm.test("Body matches string", function () {
+    pm.expect(pm.response.text()).to.include("avatar");
+});
+
+//Perform schema validation for the response.
+// Tests
+var schema = {
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "page": {
+      "type": "integer"
+    },
+    "per_page": {
+      "type": "integer"
+    },
+    "total": {
+      "type": "integer"
+    },
+    "total_pages": {
+      "type": "integer"
+    },
+    "data": {
+      "type": "array",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer"
+            },
+            "email": {
+              "type": "string"
+            },
+            "first_name": {
+              "type": "string"
+            },
+            "last_name": {
+              "type": "string"
+            },
+            "avatar": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "avatar"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer"
+            },
+            "email": {
+              "type": "string"
+            },
+            "first_name": {
+              "type": "string"
+            },
+            "last_name": {
+              "type": "string"
+            },
+            "avatar": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "avatar"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer"
+            },
+            "email": {
+              "type": "string"
+            },
+            "first_name": {
+              "type": "string"
+            },
+            "last_name": {
+              "type": "string"
+            },
+            "avatar": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "avatar"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer"
+            },
+            "email": {
+              "type": "string"
+            },
+            "first_name": {
+              "type": "string"
+            },
+            "last_name": {
+              "type": "string"
+            },
+            "avatar": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "avatar"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer"
+            },
+            "email": {
+              "type": "string"
+            },
+            "first_name": {
+              "type": "string"
+            },
+            "last_name": {
+              "type": "string"
+            },
+            "avatar": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "avatar"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer"
+            },
+            "email": {
+              "type": "string"
+            },
+            "first_name": {
+              "type": "string"
+            },
+            "last_name": {
+              "type": "string"
+            },
+            "avatar": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "avatar"
+          ]
+        }
+      ]
+    },
+    "support": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "url",
+        "text"
+      ]
+    }
+  },
+  "required": [
+    "page",
+    "per_page",
+    "total",
+    "total_pages",
+    "data",
+    "support"
+  ]
+};
+
+var data1 = pm.response.json();
+
+pm.test('Schema is valid', function () {
+    pm.expect(tv4.validate(data1, schema)).to.be.true;
+
+});
+
+
+=======================================================
+B)
+// Check the status code is 201 and status name is “Created”
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(201);
+});
+
+//Check whether the response time is below 500ms
+pm.test("Response time is less than 500ms", function () {
+    pm.expect(pm.response.responseTime).to.be.below(500);
+});
+
+====================================================
+
+c)
+
+//write in body 
+{
+    "data": {
+        "id": 2,
+        "email": "morpheus@reqres.in",
+        "first_name": "morpheus",
+        "job": "Admin",
+        "avatar": "https://reqres.in/img/faces/2-image.jpg"
+    },
+    "support": {
+        "url": "https://reqres.in/#support-heading",
+        "text": "To keep ReqRes free, contributions towards server costs are appreciated!"
+    }
+}
+
+//pre-request script
+pm.environment.set("url", "https://reqres.in");
+
+
+//tests
+//Check the status code is 200 and status name is “OK”
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+
+==================================================
+
+D)
+
+//test whether the status code is “204”
+pm.test("Status code is 204", function () {
+    pm.response.to.have.status(204);
+});
+
+//test whether the status name is “No content”.
+pm.test("Status code name has string", function () {
+    pm.response.to.have.status("No Content");
+});

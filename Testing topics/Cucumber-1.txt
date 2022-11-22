@@ -1,0 +1,44 @@
+Cucumer is a tool that supports BDD 
+
+
+Gherkin :- 
+	It is a Business Readable, Domine Specific Language thet lets you describe softwares behavior.
+
+	Gherkin is a set of grammer rules that makes plain text structured enough for  cucumber to understand. The scenario above written in Gherkin.
+
+Gherkin serves multiple purposes :
+*Unambiguous executable specification.
+*Automation testin using Cucmber.
+*Document how the system actually behaves.
+
+
+Advantages of Gherkin :
+*Gherkin is simple for non-programmers to understand
+*Every feature should able to excuted along
+*Steps information should be shown independently
+*Connect your Scenario's with your requirements
+*Keep a complete travk of what scenarios should be included in a reqirement document
+*Create modular and easy to understant steps
+*Try to combine all your common scenarios
+
+
+Disadvantages of gerkin :
+*It reqiures a high level of business engagement and collabrations.
+*May not work well in all scenarios.
+*Poorly written tests can easily increase test-maintenance cost.
+
+Keywords in Cucumber :
+*Scenario
+*Feature
+*Feature file
+*Scenario outline
+*Step Definition
+
+
+
+Scenario (Testcase) :
+	*Scenario
+	*Given
+	*When
+	*And
+	*Then

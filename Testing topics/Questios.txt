@@ -1,0 +1,168 @@
+Write a program to navigate to https://www.easemytrip.com/ (15)
+
+a. Click on the “bus” menu
+
+b. Select from as “Bangalore” and To as “Coimbatore”.
+
+c. Choose the Travel date as “July 2nd 2022” and Search for the available buses
+
+d. Select the departure time as “After 6PM”.
+
+e. Select bus operator as “jai sai Roadlinks”
+
+f. Choose the bus which departs at “19:00” by clicking on “select seats”
+
+g. Select any two seats that are available.
+
+h. Choose the boarding point as “19:30 Shanthi Nagar” and drop point as “12:45 Avinasi By pass”.
+
+i. Click on “Continue”.
+
+j. On the right side of the page select the coupon as “EMTONE”.
+
+k. Click on the radio button “Yes, I want to secure my trip with insurance”
+
+l. Provide the contact details and click on “continue booking”.
+
+m. Provide the travellers details and mobile number and click on “continue booking”
+
+Perform automation testing with the keyword driven framework and take the screenshot for pass 
+
+and failed test cases.
+
+   
+
+
+
+
+
+
+
+
+
+
+
+
+
+Write a program to navigate to https://in.bookmyshow.com (15)
+
+a. Click on “not now” for the Get Personalized Updates box.
+
+b. Choose the city as “Chennai”.
+
+c. From the movie’s recommended, choose “Marvel Studio Doctor Strange” and click on “Book tickets”.
+
+d. Select the language and format as “English” and “3D.”
+
+e. Click on “Block” for the location pop up box.
+
+f. Choose the movie date as “22 May 2022”
+
+g. Select the theatre as “AGS Cinemas: Villivakkam” show time:04:00PM
+
+h. Accept the terms and conditions
+
+i. Select the number of seats as “4” and click on “select the seats”
+
+j. Choose the seats and click on “pay”
+
+k. Select the snacks as “combo 1” and at the end of the page click on “proceed”.
+
+Perform automation testing with the POM and take the screenshot for pass and fail test cases
+
+
+
+
+
+
+a. Implement the following scenario’s using Cucumber DDT (10)
+
+Feature: search Wikipedia
+
+Background:
+
+ Given Open http://en.wikipedia.org
+
+ 
+
+Scenario Outline:
+
+ Given Enter search term '<searchTerm>'
+
+ When Do search
+
+ Then Multiple results are shown for '<result>'
+
+ Examples:
+
+ | searchTerm | result |
+
+ | mercury | Mercury may refer to: |
+
+ | max | Max may refer to: |
+
+b. Mention the keywords that are used in Cucumber
+
+c. Write the difference between a Scenario and Scenario Outline.
+
+
+
+
+
+
+
+
+
+
+
+
+Perform API testing for the given API (10)
+
+a. https://reqres.in/api/users?page=2
+
+Get the list of users for the above API and write the test case for the following response
+
+i. Check whether the “page” value is 2
+
+ii. Check whether the “email id” contains @ and . 
+
+iii. Check whether “first name” and “last name” contains only String
+
+iv. Check whether the response contains a string “avatar”
+
+v. Perform schema validation for the response.
+
+
+
+b. https://reqres.in/api/users
+
+Perform POST operation for the above API by creating name as Yourname and Job as “Trainee”
+
+Write test case for the following
+
+i. Check the status code is 201 and status name is “Created”
+
+ii. Check whether the response time is below 500ms
+
+
+
+c. {{url}}/api/users/2
+
+i. Write a pre-request script to set an environment variable url = https://reqres.in and use the 
+
+same variable in the request url.
+
+ii. Perform PUT operation for the above API. Given “name” as “morpheus” update “Job” as 
+
+“Admin”
+
+iii. Check the status code is 200 and status name is “OK”
+
+
+
+d. https://reqres.in/api/users/2
+
+Perform DELETE operation for the above API and test whether the status code is “204” and status 
+
+name is “No content”.
+

@@ -1,0 +1,43 @@
+Fundamental
+HTML & CSS
+Bootstrap
+JavaScript
+Jquery
+Angular
+MySql
+CoreJava
+JUnit
+Selinium
+TestNG
+
+
+
+
+
+
+
+
+
+
+The hardest single part of building a software system is deciding precisely what to build.
+
+– Fred Brooks, The mythical man-month
+
+
+
+
+DAO    : - 	Data Access Object
+TDD    : - 	Test Driven Development
+POM   : - 	Page Object Model
+BDD   : - 	Behavoiur Driven Development
+
+(Work on these)
+Types of Testing ?  **
+
+
+Cucumber
+Gherkin
+Agile
+Scrum
+Jeera
+SaopUI

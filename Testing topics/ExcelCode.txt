@@ -1,0 +1,85 @@
+
+
+
+
+
+
+//		FileInputStream fin = null;
+//		String path="SignUpData.xls";
+//		File xlsFile = new File(path);
+//		HSSFWorkbook book=null ;
+//		//XSSFWorkbook book;
+//		fin = new FileInputStream(xlsFile);
+//		if(path.endsWith("xls")) {
+//
+//			book = new HSSFWorkbook(fin);
+//
+//		}
+//		else if(path.endsWith("xlsx")){
+//			//XSSFWorkbook book = null;
+//		}
+//		Sheet sheet = book.getSheet("sheet1");
+////		System.out.println("Workbook created");
+		
+//		for (Row row : sheet) {
+//
+//			// row.getCell(1).getStringCellValue();
+//			String mbNum = row.getCell(0).getStringCellValue();
+//			signUpData[rowIndex] = mbNum;
+//			rowIndex++;
+//
+//		}
+//
+//		fin.close();
+		
+
+
+
+
+
+
+
+
+
+//		int rowIndex = 0;
+//		FileInputStream fin = null;
+//		String path="SignUpData.xls";
+//		File xlsFile = new File(path);
+//		HSSFWorkbook book=null ;
+//		//XSSFWorkbook book;
+//		fin = new FileInputStream(xlsFile);
+//		if(path.endsWith("xls")) {
+//
+//			book = new HSSFWorkbook(fin);
+//
+//		}
+//		else if(path.endsWith("xlsx")){
+//			//XSSFWorkbook book = null;
+//		}
+//		Sheet sheet = book.getSheet("Sheet2");
+//		System.out.println("Workbook created");	
+//		for (Row row : sheet) {
+//
+//			// row.getCell(1).getStringCellValue();
+//			String from = row.getCell(0).getStringCellValue();
+//			String to=row.getCell(1).getStringCellValue();
+//			String month=row.getCell(2).getStringCellValue();
+//			String date=row.getCell(3).getStringCellValue();
+//			int adult=(int) row.getCell(4).getNumericCellValue();
+//			int child=(int) row.getCell(5).getNumericCellValue();
+//			int infant=(int) row.getCell(6).getNumericCellValue();
+//			signUpData[rowIndex][0] = from;
+//			signUpData[rowIndex][1] = to;
+//			signUpData[rowIndex][2] = month;
+//			signUpData[rowIndex][3] = date;
+//			signUpData[rowIndex][4] = adult;
+//			signUpData[rowIndex][5] = child;
+//			signUpData[rowIndex][6] = infant;
+//			
+//			rowIndex++;
+//
+//		}
+//
+//		fin.close();
+		
+		

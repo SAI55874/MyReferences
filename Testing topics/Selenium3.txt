@@ -1,0 +1,143 @@
+orangehrm
+CherCherTech
+TestNg 
+SwitchTo().{window
+Use Keys
+
+
+**Alerts
+**popups
+**date picker
+
+Customized-css-selector=TagName[attribute="value"]
+		Xpath =	//TagName[@attribute='value']
+Actions--{mouse operatons-drag,drop,}
+Frames
+
+
+Actions a=new Actions(driver);--All the mouse actions
+
+
+WebEliment source=driver.find
+WebElement target
+a.dragAndDrop(source,target).build().perform();
+
+
+
+
+______________________________________________________________
+
+TagName[attribute="value"] element
+li[Class=''] a
+equalsIgnoreCase("")
+_______________________________
+**
+Use Wait--lis
+impicite,explicite,fluent
+
+
+**implicet
+driver.manage().timeouts.implictlyWait(5, TimeUnit.SECONDS);
+
+
+
+**Explicet
+WebDriver d=new WebDriverWait(driver,20);
+d.until(ExpectedConditions.alert());
+d.until(ExpectedConditions.elementToBeClicked(By.Xpath()))
+_______________________________
+
+
+Alert alert=driver.switchTo().alert();
+alert.getText();
+alert.getDismiss();
+alert.getAccept();
+
+
+_____________________________________________________________
+
+
+Exercises
+->Move
+->double Click
+->Alerts and Promt**
+->Windows**
+->Looping
+->AutoSuggest**
+
+
+
+____________________________________________________________
+https://mdbootstrap.com/docs/standard/plugins/drag-and-drop/
+
+
+
+
+
+
+
+
+
+-----------------------
+	Hybrid Framework:
+Mixer of both DataDriven And Keyword Driven frameworks
+ActionKey Words
+ExcelUtil
+ExcelFileForKeywords
+DriverUtil
+DriverScript(Test)
+	Log4j
+Log4j.properties file to insialize the logger levels.
+
+A .log file to catch the log details
+
+
+
+
+
+
+
+_________________________________________
+Cucumer feature file:
+#Author: your.email@your.domain.com
+#Keywords Summary :
+#Feature: List of scenarios.
+#Scenario: Business rule through list of steps with arguments.
+#Given: Some precondition step
+#When: Some key actions
+#Then: To observe outcomes or validation
+#And,But: To enumerate more Given,When,Then steps
+#Scenario Outline: List of steps for data-driven as an Examples and <placeholder>
+#Examples: Container for s table
+#Background: List of steps run before each of the scenarios
+#""" (Doc Strings)
+#| (Data Tables)
+#@ (Tags/Labels):To group Scenarios
+#<> (placeholder)
+#""
+## (Comments)
+#Sample Feature Definition Template
+@tag
+Feature: Title of your feature
+  I want to use this template for my feature file
+
+  @tag1
+  Scenario: Title of your scenario
+    Given I want to write a step with precondition
+    And some other precondition
+    When I complete action
+    And some other action
+    And yet another action
+    Then I validate the outcomes
+    And check more outcomes
+
+  @tag2
+  Scenario Outline: Title of your scenario outline
+    Given I want to write a step with <name>
+    When I check for the <value> in step
+    Then I verify the <status> in step
+
+    Examples: 
+      | name  | value | status  |
+      | name1 |     5 | success |
+      | name2 |     7 | Fail    |

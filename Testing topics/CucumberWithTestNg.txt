@@ -1,0 +1,504 @@
+Cucucmber with TestNg
+				*******Feature*********
+Feature: Add new item to ToDO list
+
+Scenario: Lambdatest ToDO Scenario
+
+Given user is on home Page
+When select First Item
+Then select second item
+Then add new item
+Then verify added item
+
+				********"TestRunner"*********
+package MyRunner;
+
+import java.net.URL;
+
+import org.openqa.selenium.remote.CapabilityType;
+import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.RemoteWebDriver;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Parameters;
+import org.testng.annotations.Test;
+
+import cucumber.api.CucumberOptions;
+import cucumber.api.testng.CucumberFeatureWrapper;
+import cucumber.api.testng.TestNGCucumberRunner;
+
+@CucumberOptions(
+        features = "src/main/java/Features",
+        glue = {"stepDefinitions"},
+        tags = {"~@Ignore"},
+        format = {
+                "pretty",
+                "html:target/cucumber-reports/cucumber-pretty",
+                "json:target/cucumber-reports/CucumberTestReport.json",
+                "rerun:target/cucumber-reports/rerun.txt"
+        },plugin = "json:target/cucumber-reports/CucumberTestReport.json")
+
+public class TestRunner {
+
+    private TestNGCucumberRunner testNGCucumberRunner;
+
+    public static RemoteWebDriver connection;
+
+    @BeforeClass(alwaysRun = true)
+    public void setUpCucumber() {
+         testNGCucumberRunner = new TestNGCucumberRunner(this.getClass());
+    }
+
+    @BeforeMethod(alwaysRun = true)
+    @Parameters({ "browser", "version", "platform" })
+    public void setUpClass(String browser, String version, String platform) throws Exception {
+
+            String username = System.getenv("LT_USERNAME") == null ? "YOUR LT_USERNAME" : System.getenv("LT_USERNAME");
+            String accesskey = System.getenv("LT_ACCESS_KEY") == null ? "YOUR LT_ACCESS_KEY" : System.getenv("LT_ACCESS_KEY");
+
+            DesiredCapabilities capability = new DesiredCapabilities();
+            capability.setCapability(CapabilityType.BROWSER_NAME, browser);
+            capability.setCapability(CapabilityType.VERSION,version);
+            capability.setCapability(CapabilityType.PLATFORM, platform);
+            capability.setCapability("build", "Your Build Name");
+            String gridURL = "https://" + username + ":" + accesskey + "@hub.lambdatest.com/wd/hub";
+            System.out.println(gridURL);
+            connection = new RemoteWebDriver(new URL(gridURL), capability);
+            System.out.println(capability);
+            System.out.println(connection);
+}
+
+    @Test(groups = "cucumber", description = "Runs Cucumber Feature", dataProvider = "features")
+    public void feature(CucumberFeatureWrapper cucumberFeature) {
+        testNGCucumberRunner.runCucumber(cucumberFeature.getCucumberFeature());
+    }
+
+    @DataProvider
+    public Object[][] features() {
+        return testNGCucumberRunner.provideFeatures();
+    }
+
+    @AfterClass(alwaysRun = true)
+    public void tearDownClass() throws Exception {
+        testNGCucumberRunner.finish();
+    }
+}
+
+
+
+
+
+					**********stepDefinations*************
+
+
+
+package stepDefinitions;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.remote.RemoteWebDriver;
+import org.testng.Assert;
+
+import cucumber.api.Scenario;
+import cucumber.api.java.After;
+import cucumber.api.java.Before;
+import cucumber.api.java.en.Given;
+import cucumber.api.java.en.Then;
+import cucumber.api.java.en.When;
+import MyRunner.*;
+
+public class ToDoStepDefinition extends TestRunner {
+
+    public RemoteWebDriver driver = this.connection;
+
+    @Before
+    public void updateName(Scenario scenario) {
+        driver.executeScript("lambda-name="+scenario.getName());
+    }
+
+    @Given("^user is on home Page$")
+    public void user_already_on_home_page() {
+        System.out.println(driver.getCapabilities());
+        driver.get("https://lambdatest.github.io/sample-todo-app/");
+
+    }
+
+    @When("^select First Item$")
+    public void select_first_item() {
+        driver.findElement(By.name("li1")).click();
+    }
+
+    @Then("^select second item$")
+    public void select_second_item() {
+        driver.findElement(By.name("li2")).click();
+    }
+
+    @Then("^add new item$")
+    public void add_new_item() {
+        driver.findElement(By.id("sampletodotext")).clear();
+        driver.findElement(By.id("sampletodotext")).sendKeys("Yey, Let's add it to list");
+        driver.findElement(By.id("addbutton")).click();
+    }
+
+    @Then("^verify added item$")
+    public void verify_added_item() {
+        String item = driver.findElement(By.xpath("/html/body/div/div/div/ul/li[6]/span")).getText();
+        Assert.assertTrue(item.contains("Yey, Let's add it to list"));
+    }
+
+    @After
+    public void close_the_browser(Scenario scenario) {
+        driver.executeScript("lambda-status=" + (scenario.isFailed() ? "failed" : "passed"));
+        driver.quit();
+    }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+**************************************************************************************************************************
+<dependencies>
+  <!-- https://mvnrepository.com/artifact/io.cucumber/cucumber-java -->
+    <dependency>
+      <groupId>io.cucumber</groupId>
+      <artifactId>cucumber-java</artifactId>
+      <version>6.10.4</version>
+    </dependency>
+  
+ 
+<!-- https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java -->
+    <dependency>
+      <groupId>org.seleniumhq.selenium</groupId>
+      <artifactId>selenium-java</artifactId>
+      <version>3.141.59</version>
+    </dependency>
+     
+<!-- https://mvnrepository.com/artifact/org.testng/testng -->
+    <dependency>
+      <groupId>org.testng</groupId>
+      <artifactId>testng</artifactId>
+      <version>7.4.0</version>
+      <scope>test</scope>
+    </dependency>
+ 
+<!-- https://mvnrepository.com/artifact/io.cucumber/cucumber-testng -->
+    <dependency>
+      <groupId>io.cucumber</groupId>
+      <artifactId>cucumber-testng</artifactId>
+      <version>6.10.4</version>
+    </dependency>
+ 
+<!-- https://mvnrepository.com/artifact/org.hamcrest/hamcrest-core -->
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest</artifactId>
+      <version>2.2</version>
+      <scope>test</scope>
+    </dependency>
+     
+</dependencies>
+********************************************************************************************
+<build>
+     <plugins>
+       <plugin>
+         <groupId>org.apache.maven.plugins</groupId>
+         <artifactId>maven-compiler-plugin</artifactId>
+         <version>3.7.0</version>
+         <configuration>
+           <source>11</source>
+           <target>11</target>
+            <encoding>UTF-8</encoding>          
+         </configuration>
+       </plugin>                
+       </plugins>
+   </build>
+********************************************************************************************
+Feature: Login to HRM Application 
+  
+   @ValidCredentials
+   Scenario: Login with valid credentials
+      
+    Given User is on Home page
+    When User enters username as "Admin"
+    And User enters password as "admin123"
+    Then User should be able to login sucessfully
+********************************************************************************************
+public class LoginDefinition {
+ 
+    WebDriver driver;
+ 
+    @Before
+    public void setUp() {
+        System.setProperty("webdriver.gecko.driver",
+                "C:\\Users\\Vibha\\Software\\geckodriver-v0.26.0-win64\\geckodriver.exe");
+ 
+        driver = new FirefoxDriver();
+ 
+        driver.manage().window().maximize();
+        driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
+    }
+ 
+    @Given("User is on Home page")
+    public void userOnHomePage() {
+ 
+        driver.get("https://opensource-demo.orangehrmlive.com/");
+    }
+ 
+    @When("User enters username as {string}")
+    public void entersUsername(String userName) throws InterruptedException {
+ 
+        System.out.println("Username Entered");
+        driver.findElement(By.name("txtUsername")).sendKeys(userName);
+ 
+    }
+ 
+    @When("User enters password as {string}")
+    public void entersPassword(String passWord) throws InterruptedException {
+ 
+        System.out.println("Password Entered");
+        driver.findElement(By.name("txtPassword")).sendKeys(passWord);
+ 
+        driver.findElement(By.id("btnLogin")).submit();
+    }
+ 
+    @Then("User should be able to login sucessfully")
+    public void sucessfullLogin() throws InterruptedException {
+ 
+        String newPageText = driver.findElement(By.id("welcome")).getText();
+        System.out.println("newPageText :" + newPageText);
+        assertThat(newPageText, containsString("Welcome"));
+ 
+    }
+ 
+    @After
+    public void teardown() {
+ 
+        driver.quit();
+    }
+ 
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<?xml version = "1.0"encoding = "UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name = "Suite1">
+  <test name = "Test Demo">
+    <classes>
+          <class name = "com.example.Cucumber_TestNGDemo.runner.CucumberRunnerTest"/>
+     </classes>  
+   </test>
+</suite>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Feature: Apple Airpods Web Page
+
+@SmokeTest
+Scenario Outline: Apple Airpods keyword tests
+
+Given user is already on apple website
+When title is Apple
+Then search for "<airpod>"
+When title is AirPods - Apple
+Then print welcome to the airpods official webpage
+
+#In Examples the first row should have the variable name defined in above cucumber annotations/steps
+
+Examples:
+| airpod |
+| airpo |
+| AIRPO |
+
+
+
+
+package stepDefinitions;
+ 
+import java.util.concurrent.TimeUnit;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.testng.Assert;
+import cucumber.api.java.After;
+import cucumber.api.java.Before;
+import cucumber.api.java.en.Given;
+import cucumber.api.java.en.Then;
+import cucumber.api.java.en.When;
+ 
+public class AppleStepDefinitions {
+     
+    public WebDriver driver;
+ 
+    @Before
+    public void setUp()
+    {
+      System.out.println("Before Hook Method Running....");
+    }
+     
+     
+    @Given("^user is already on apple website$")
+    public void user_is_already_on_apple_website() {
+                 
+        System.setProperty("webdriver.chrome.driver", "C:\\Users\\Lenovo-I7\\Desktop\\chromedriver.exe");
+        driver = new ChromeDriver();
+        driver.get("https://www.apple.com/");
+    }
+ 
+    @When("^title is Apple$")
+    public void title_is_iPad_Apple() {
+        String title = driver.getTitle();
+        Assert.assertEquals("Apple", title);
+    }
+     
+ 
+    @Then("^search for \"([^\"]*)\"$")
+    public void search_for_airpods_by_keyword(String airpodsKeyword) throws InterruptedException {
+        WebElement search = driver.findElement(By.id("ac-gn-link-search"));
+        search.click();
+        driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+ 
+        driver.findElement(By.id("ac-gn-searchform-input")).sendKeys(airpodsKeyword);
+        driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+        Thread.sleep(2000);
+ 
+        driver.findElement(By.xpath("//*[@id=\"quicklinks\"]/li[1]/a")).click();
+        driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+ 
+    }
+ 
+    @When("^title is AirPods - Apple$")
+    public void title_is_AirPods_Apple() {
+        String title = driver.getTitle();
+        System.out.println("Airpods Page title ::" + title);
+        Assert.assertEquals("AirPods - Apple", title);
+    }
+ 
+    @Then ("^print welcome to the airpods official webpage$")
+    public void print_message() {
+        System.out.println("Welcome to airpod official web page");
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        driver.quit();
+ 
+    }
+    @After
+    public void tearDown()
+    {
+      System.out.println("After Hook Method Running....");
+    }
+}
+
+
+
+
+
+
+package testRunner;
+ 
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
+import cucumber.api.CucumberOptions;
+import cucumber.api.testng.CucumberFeatureWrapper;
+import cucumber.api.testng.TestNGCucumberRunner;
+ 
+@CucumberOptions(
+    features = "src/test/java/FeatureFile",
+    glue = {"stepDefinitions"},
+    tags = {"@SmokeTest"}, 
+    format = {
+                    "pretty",
+                    "html:target/cucumber-reports/cucumber-pretty",
+                    "json:target/cucumber-reports/CucumberTestReport.json",
+                    "rerun:target/cucumber-reports/rerun.txt"
+            },
+    plugin = "json:target/cucumber-reports/CucumberTestReport.json")
+ 
+public class Runner {
+     
+    private TestNGCucumberRunner testNGCucumberRunner;
+      
+    @BeforeClass()
+    public void setUpClass() throws Exception {
+        testNGCucumberRunner = new TestNGCucumberRunner(this.getClass());
+    }
+     
+    @Test(dataProvider="features")
+      public void my_test(CucumberFeatureWrapper cucumberFeature)        {
+        testNGCucumberRunner.runCucumber(cucumberFeature.getCucumberFeature());
+    }
+     
+     
+    @DataProvider
+    public Object[][] features()
+    {
+        return testNGCucumberRunner.provideFeatures();      
+    }
+     
+     
+    @AfterClass
+    public void tearDown()
+    {
+        testNGCucumberRunner.finish();
+         
+    }
+}
+

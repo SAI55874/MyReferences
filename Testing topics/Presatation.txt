@@ -1,0 +1,6 @@
+Avenir
+Myrid
+Gotham
+serif for headline
+Sanserif for contents
+Saturated colors only

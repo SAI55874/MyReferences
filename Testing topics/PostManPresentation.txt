@@ -1,0 +1,6 @@
+Before going into the topic first we discuss about, what is api? What can we test in an API?
+An API is middleware code that enables two software programs to communicate with each other.
+Applications frequently have three layers: a data layer, a service layer -- the API layer -- and a presentation layer -- the user interface (UI) layer. The business logic of the application -- the guide to how users can interact with the services, functions and data held within the app -- is in the API layer. API testing focuses on analyzing the business logic as well as the security of the application and data responses. An API test is generally performed by making requests to one or more API endpoints and comparing the response with expected results.
+
+
+Here we are testing the API with postman 

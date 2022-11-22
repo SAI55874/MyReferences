@@ -1,0 +1,8 @@
+custamized css selector
+
+Tagname[attribute = 'value']
+
+
+Custamized Xpath
+
+//Tagname[@attribute='value']

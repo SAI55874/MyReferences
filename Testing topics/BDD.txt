@@ -1,0 +1,13 @@
+BDD :- Behaviour Driven Development
+
+	BDD is an Agile Softwere development methodology in which an application is documented and designed around the behavoiur a user expects to experience when interacting with it.
+
+---***---
+
+	BDD is designed to test an application's behaviour from the end user's standpoint, whereas TDD is focused on testing smaller pieces of functionality in isolation.
+
+
+BDD involves product managers, developers, and test engineers who collaborate to come up with concrete examples of desirable functionality. There is a high level of communication before any implementation. By comparison, TDD can be done by a solo developer without any external input from product managers or stakeholders.
+
+The TDD test asserts the result of a specific method, while the BDD test is only concerned about the result of the higher level scenario.
+	

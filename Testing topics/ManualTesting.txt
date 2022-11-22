@@ -1,0 +1,54 @@
+What is Manual Testing?
+Manual testing is a testing process that is carried out manually in order to find defects without the usage of tools or automation scripting.
+
+A test plan document is prepared that acts as a guide to the testing process in order to have the complete test coverage.
+
+What is Manual Testing?
+Following are the testing techniques that are performed manually during the test life cycle:
+
+Acceptance Testing
+
+White Box Testing
+
+Black Box Testing
+
+Unit Testing
+
+System Testing
+
+Integration Testing
+
+
+
+STLC stands for Software Testing Life Cycle. STLC is a sequence of different activities performed by the testing team to ensure the quality of the software or the product.
+
+STLC is an integral part of Software Development Life Cycle (SDLC). But, STLC deals only with the testing phases.
+
+STLC starts as soon as requirements are defined or SRD (Software Requirement Document) is shared by stakeholders.
+
+STLC provides a step-by-step process to ensure quality software.
+
+In the early stage of STLC, while the software or the product is developing, the tester can analyze and define the scope of testing, entry and exit criteria and also the Test Cases. It helps to reduce the test cycle time along with better quality.
+
+As soon as the development phase is over, the testers are ready with test cases and start with execution. This helps to find bugs in the initial phase.
+
+STLC Phases
+STLC has the following different phases but it is not mandatory to follow all phases. Phases are dependent on the nature of the software or the product, time and resources allocated for the testing and the model of SDLC that is to be followed.
+
+STLC Phases
+There are 6 major phases of STLC −
+
+Requirement Analysis − When the SRD is ready and shared with the stakeholders, the testing team starts high level analysis concerning the AUT (Application under Test).
+
+Test Planning − Test Team plans the strategy and approach.
+
+Test Case Designing − Develop the test cases based on scope and criteria’s.
+
+Test Environment Setup − When integrated environment is ready to validate the product.
+
+Test Execution − Real-time validation of product and finding bugs.
+
+Test Closure − Once testing is completed, matrix, reports, results are documented.
+
+ Previous Page  Print PageNext Page  
+Advertisements

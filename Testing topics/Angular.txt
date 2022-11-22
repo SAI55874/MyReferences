@@ -1,0 +1,15 @@
+ng new myapp
+
+
+ng g c cname
+
+npm install primeng
+
+npm i primengicons
+npm install @angular/cdk
+
+
+
+ng g pipe pipename
+
+ng g service servicename
