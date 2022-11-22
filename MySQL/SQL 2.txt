@@ -1,0 +1,157 @@
+				TIME SHEET DOMAIN
+
+1.Which PROJECT has maximum number of EMPLOYEES?
+
+
+SELECT t_project.project_name
+		,COUNT(employee.EMP_ID) AS 'No_of_emp'
+FROM allocation
+LEFT JOIN t_project
+ON t_project.project_id = allocation.project_id
+RIGHT JOIN employee
+ON employee.emp_id = allocation.emp_id
+GROUP BY t_project.PROJECT_id
+ORDER BY no_of_emp DESC
+
+
+---------------------------------------
+
+SELECT emp.project_name
+FROM(SELECT t_project.project_name
+		,COUNT(employee.EMP_ID) AS 'No_of_emp'
+        ,DENSE_RANK() OVER( ORDER BY COUNT(employee.EMP_ID) DESC ) AS 'max_emp' 
+FROM allocation
+LEFT JOIN t_project
+ON t_project.project_id = allocation.project_id
+RIGHT JOIN employee
+ON employee.emp_id = allocation.emp_id
+GROUP BY t_project.PROJECT_id
+ORDER BY no_of_emp DESC) emp
+WHERE  max_emp= 1;
+
+_________________________________________________________________________________
+2.Which EMPLOYEE has not yet been allocated to any PROJECT?
+
+SELECT employee.emp_id
+		,employee.emp_name
+FROM allocation
+RIGHT JOIN employee
+ON employee.emp_id = allocation.emp_id
+WHERE employee.emp_id NOT IN (SELECT allocation.emp_id
+					FROM allocation)
+GROUP BY employee.emp_id
+
+
+
+
+
+__________________________________________________________________________________
+3.Which role played by the employee 'E03' frequently?
+
+
+SELECT a.emp_id
+		,a.role_title
+FROM(SELECT employee.emp_id
+		,role.role_title
+        ,RANK()OVER(ORDER BY role_title DESC) AS rk
+FROM allocation
+LEFT JOIN role
+ON role.role_id = allocation.role_id
+RIGHT JOIN employee
+ON employee.emp_id = allocation.emp_id
+WHERE employee.emp_id = 'E03') a
+WHERE rk = 1;
+
+
+
+___________________________________________________________________________________
+4.Which is the costliest Project?
+
+
+
+
+SELECT project_id
+	,MAX(amount_per_day) AS 'costliest_project'
+FROM allocation
+
+??????
+___________________________________________________________________________________
+5.How many employees were there in costliest Project
+
+
+
+SELECT project_id
+	,amount_per_day AS 'cost_of_project'
+    ,COUNT(emp_id) AS 'no_of_emp'
+FROM allocation
+GROUP BY amount_per_day
+ORDER BY cost_of_project DESC
+LIMIT 1;
+
+???????
+________________________________________________________________________________________
+6.Which is the cheapest Project in the year 2012?
+
+
+SELECT project_id
+		,YEAR(deadline) AS 'yr'
+FROM t_project
+WHERE YEAR(deadline)=2012
+ORDER BY deadline ASC;
+
+/////////////
+
+________________________________________________________________________________________
+7.What is the salary of employee, who played maximum roles in Project 'P07'?
+
+
+
+SELECT t_project.project_id
+		,employee.emp_name
+        ,employee.salary
+FROM allocation
+LEFT JOIN t_project
+ON t_project.project_id = allocation.project_id
+RIGHT JOIN employee
+ON employee.emp_id = allocation.emp_id
+WHERE t_project.project_id = 'P07'
+
+
+
+________________________________________________________________________________________
+8.How many projects are handled by senior most employee?
+
+
+SELECT employee.emp_name
+	,employee.hire_date
+    ,COUNT(allocation.project_id) AS 'No_of_projects'
+FROM employee
+LEFT JOIN allocation
+ON employee.emp_id = allocation.emp_id
+GROUP BY employee.emp_id
+ORDER BY hire_date ASC
+
+
+
+_________________________________________________________________________________________
+9.What is the total amount spent for unassigned employees?
+
+
+
+SELECT employee.emp_id 
+    ,(((2021-YEAR(employee.hire_date))*12-MONTH(employee.hire_date))+MONTH(NOW()) ) *salary AS 'Amount_spent'
+FROM employee
+LEFT JOIN allocation
+ON  employee.emp_id =allocation.emp_id 
+WHERE employee.emp_id NOT IN (SELECT emp_id
+					FROM allocation)
+GROUP BY employee.emp_id
+
+
+_________________________________________________________________________________________
+10.How many projects are completed till date (Assume to_date is completion date in Allocation table)?
+
+
+
+
+_________________________________________________________________________________________
